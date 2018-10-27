@@ -11,12 +11,14 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
         if (event.motion.state & SDL_BUTTON_LMASK) {
             rotationY += event.motion.xrel;
             rotationX += event.motion.yrel;
+            return true;
         }
     }
     if (event.type == SDL_MOUSEWHEEL) {
         if (event.wheel.y) {
             zoom -= event.wheel.y;
             distance = pow(2, zoom) * DISTANCE_BASE;
+            return true;
         }
     }
     return false;

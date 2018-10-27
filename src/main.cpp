@@ -8,7 +8,8 @@
 
 #include "CameraHandler.h"
 #include "PerlinNoise.h"
-#include "use_nuklear.h"
+#include "Gui.h"
+#include "nlg.h"
 
 using namespace std;
 
@@ -17,19 +18,13 @@ const int HEIGHT = 720;
 
 GLuint texture;
 
-struct NoiseParams {
-    float z;
-    float levelMin = 0, levelMax = 1;
-    int octaves;
-    float persistence;
-    float lacunarity;
-};
+NoiseParams params;
 
 // Generate a random texture tgb
-void
-generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, float scale, NoiseParams &params) {
-    float z = params.z;
+void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, float scale,
+                          NoiseParams &params) {
 
+    float z = params.z;
     unsigned int kk = 0;
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -63,6 +58,12 @@ generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height,
 }
 
 void InitGL() {
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
     // Setup buffers
     glViewport(0, 0, WIDTH, HEIGHT);
     glClearColor(0.3, 0.3, 0.3, 1);
@@ -111,15 +112,9 @@ void render() {
     const int size = 2;
 
     // update texture
-    NoiseParams params{};
+    glBindTexture(GL_TEXTURE_2D, texture);
+
     params.z = SDL_GetTicks() / 1000.f;
-    // first octave range is [-1,1], second is [.5,.5], third is [.25,.25]
-    // total range is [-1.75,1,75]
-    params.levelMin = -1.4f;
-    params.levelMax = 1.4f;
-    params.octaves = 3;
-    params.persistence = 0.5;
-    params.lacunarity = 2;
 
     static PerlinNoise pn;
     int width = 128, height = 128;
@@ -170,27 +165,23 @@ int main() {
     SDL_GL_SetSwapInterval(1);
 
     InitGL();
+    Gui gui{window};
+    gui.resize(WIDTH, HEIGHT);
 
     while (true) {
         SDL_Event event;
 
+        gui.inputBegin();
         while (SDL_PollEvent(&event)) {
-            if (camera.handleEvent(event)) continue;
-
-            switch (event.type) {
-                case SDL_QUIT:
-                    SDL_Quit();
-                    return 0;
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_ESCAPE:
-                            SDL_Quit();
-                            return 0;
-                    }
-                    break;
+            if (event.type == SDL_QUIT) {
+                SDL_Quit();
+                return 0;
             }
 
+            if (gui.inputhandleEvent(event)) continue;
+            if (camera.handleEvent(event)) continue;
         }
+        gui.inputEnd();
 
         // setup camera
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -200,6 +191,11 @@ int main() {
         camera.applyViewMatrix();
 
         render();
+
+        gui.editor("Parameters", params);
+
+        gui.render();
+
         SDL_GL_SwapWindow(window);
     }
 
