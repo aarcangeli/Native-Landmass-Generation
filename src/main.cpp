@@ -16,6 +16,11 @@ void InitGL() {
 }
 
 void render() {
+    double cyclePerSecond = 2;
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glRotated(SDL_GetTicks() / 1000. * cyclePerSecond * 360, 0, 1, 0);
+
     glClear(GL_COLOR_BUFFER_BIT);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2d(-0.9, -0.9);
@@ -39,14 +44,21 @@ int main() {
 
     InitGL();
 
-    bool running = true;
-    while (running) {
+    while (true) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-                break;
+            switch (event.type) {
+                case SDL_QUIT:
+                    SDL_Quit();
+                    return 0;
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_ESCAPE:
+                            SDL_Quit();
+                            return 0;
+                    }
+                    break;
             }
         }
 
@@ -54,6 +66,4 @@ int main() {
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_Quit();
-    return 0;
 }
