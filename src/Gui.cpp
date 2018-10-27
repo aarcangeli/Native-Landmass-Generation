@@ -70,6 +70,7 @@ void Gui::editor(const char *string, NoiseParams &params) {
         if (nk_option_label(ctx, "Noise Map", params.mode == DRAW_MODE_NOISE)) params.mode = DRAW_MODE_NOISE;
         if (nk_option_label(ctx, "Colour Map", params.mode == DRAW_MODE_COLOURS)) params.mode = DRAW_MODE_COLOURS;
         nk_property_float(ctx, "Scale:", 0.01, &params.scale, 100, 0.01, 0.01);
+        nk_property_float(ctx, "Height:", 0.01, &params.heightMultiplier, 10, 0.01, 0.01);
 
         nk_label(ctx, "Noise:", NK_TEXT_LEFT);
         nk_property_int(ctx, "Octaves:", 1, &params.octaves, 10, 1, 1);

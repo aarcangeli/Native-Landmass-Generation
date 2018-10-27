@@ -20,21 +20,10 @@ GLuint texture;
 
 NoiseParams params;
 
-// Generate a random texture tgb
-void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, NoiseParams &params) {
-
-    // get level range
-    float level = 0;
-    float amplitude = 1;
-    for (int i = 0; i < params.octaves; ++i) {
-        level += amplitude;
-        amplitude *= params.persistence;
-    }
-    level = level * 0.7f;
-
+void generateNoiseMap(float *noiseData, PerlinNoise &pn, int width, int height, NoiseParams &params) {
     float scale = params.scale;
     float z = params.z;
-    unsigned int kk = 0;
+    unsigned int ii = 0;
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             float x = (j - width / 2.f) / width / scale;
@@ -55,6 +44,28 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
                 amplitude *= params.persistence;
                 frequency *= params.lacunarity;
             }
+
+            // calculate noise
+            noiseData[ii++] = noiseHeight;
+        }
+    }
+}
+
+void convertNoiseMapToTexture(float *textureData, float *noiseData, int width, int height, NoiseParams &params) {
+    // get level range
+    float level = 0;
+    float amplitude = 1;
+    for (int i = 0; i < params.octaves; ++i) {
+        level += amplitude;
+        amplitude *= params.persistence;
+    }
+    level = level * 0.7f;
+
+    unsigned int ii = 0;
+    unsigned int kk = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            float noiseHeight = noiseData[ii++];
 
             // apply level transform
             noiseHeight = (noiseHeight + level) / (level * 2);
@@ -113,72 +124,94 @@ void InitGL() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-void drawGrid() {
-    const int GRID_DIM = 10;
-    const int GRID_DIVISIONS = 100;
-
-    glPushAttrib(GL_CURRENT_BIT);
-
-    glBegin(GL_LINES);
-    glColor3d(0.5, 0.5, 0.5);
-    float step = GRID_DIM * 2.f / GRID_DIVISIONS;
-    for (int i = 0; i <= GRID_DIVISIONS; i++) {
-        float current = GRID_DIM - i * step;
-        glVertex3f(-GRID_DIM, 0, current);
-        glVertex3f(GRID_DIM, 0, current);
-        glVertex3f(current, 0, -GRID_DIM);
-        glVertex3f(current, 0, GRID_DIM);
-    }
-    glEnd();
-    glPopAttrib();
-}
-
 void render() {
+    const int width = 128, height = 128;
+    const double meshSize = 2;
+
+    // Update timer
     int now = SDL_GetTicks();
     static int lastUpdate = now;
     int delta = now - lastUpdate;
     lastUpdate = now;
 
-    const int size = 2;
-
+    // Setup OpenGL
+    glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT);
+
+    // refresh z param
+    if (params.refreshRequested) params.z = rand() * 10;
+    if (params.realtime) params.z += delta / 1000.f;
+    params.refreshRequested = false;
+
+    // generate noise map
+    float *noiseData = new float[width * height];
+    static PerlinNoise pn;
+    generateNoiseMap(noiseData, pn, width, height, params);
+
+    // convert noise map to texture
+    float *textureData = new float[width * height * 3];
+    convertNoiseMapToTexture(textureData, noiseData, width, height, params);
 
     // update texture
     glBindTexture(GL_TEXTURE_2D, texture);
-
-    if (params.refreshRequested) params.z = rand() * 10;
-    if (params.realtime) params.z += delta / 1000.f;
-    static PerlinNoise pn;
-
-    int width = 128, height = 128;
-    float *textureData = new float[width * height * 3];
-    generateNoiseTexture(textureData, pn, width, height, params);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
-    params.refreshRequested = false;
-
-    // Draw a "ground"
-    glDisable(GL_TEXTURE_2D);
-    drawGrid();
 
     // Draw a cube
-    glTranslated(0, 0.06, 0);
-    glColor3f(1, 1, 1);
+    glPushMatrix();
+    {
+        glTranslated(0, 0.06, 0);
+        glTranslated(-meshSize / 2, 0, -meshSize / 2);
+        glColor3f(1, 1, 1);
+        glScalef(1, params.heightMultiplier * params.scale, 1);
 
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
 
-    // top
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3d(-size, 0, -size);
+        for (int y = 0; y < height - 1; y++) {
+            for (int x = 0; x < width - 1; x++) {
 
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3d(size, 0, -size);
+                glTexCoord2f((float) x / width, (float) y / height);
+                glVertex3d(x * meshSize / width,
+                           noiseData[x + y * width],
+                           y * meshSize / height);
 
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3d(size, 0, size);
+                glTexCoord2f((float) x / width, (float) (y + 1) / height);
+                glVertex3d((x + 1) * meshSize / width,
+                           noiseData[(x + 1) + y * width],
+                           y * meshSize / height);
 
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3d(-size, 0, size);
+                glTexCoord2f((float) (x + 1) / width, (float) (y + 1) / height);
+                glVertex3d((x + 1) * meshSize / width,
+                           noiseData[(x + 1) + (y + 1) * width],
+                           (y + 1) * meshSize / height);
+
+                glTexCoord2f((float) (x + 1) / width, (float) y / height);
+                glVertex3d(x * meshSize / width,
+                           noiseData[x + (y + 1) * width],
+                           (y + 1) * meshSize / height);
+            }
+        }
+
+        glEnd();
+    }
+    glPopMatrix();
+
+    // Draw a little gizmo
+    glDisable(GL_DEPTH_TEST);
+    glViewport(0, 0, 50, 50);
+    glBegin(GL_LINES);
+
+    glColor3f(1, 0, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(2, 0, 0);
+
+    glColor3f(0, 1, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 2, 0);
+
+    glColor3f(0, 0, 1);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 2);
 
     glEnd();
 }
