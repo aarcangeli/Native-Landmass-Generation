@@ -8,6 +8,7 @@
 
 #include "CameraHandler.h"
 #include "PerlinNoise.h"
+#include "use_nuklear.h"
 
 using namespace std;
 

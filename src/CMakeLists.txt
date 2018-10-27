@@ -1,7 +1,9 @@
 include(SDL2)
+include(nuklear)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
+        ${NUKLEAR_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE SOURCES *.cpp)
