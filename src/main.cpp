@@ -16,20 +16,42 @@ const int HEIGHT = 720;
 
 GLuint texture;
 
+struct NoiseParams {
+    float z;
+    float initialAmplitude;
+    int octaves;
+    float persistence;
+    float lacunarity;
+};
+
 // Generate a random texture tgb
-void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, double z) {
-    const int SCALE = 10;
+void
+generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, float scale, NoiseParams &params) {
+    float z = params.z;
+
     unsigned int kk = 0;
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            float x = (float) j / width;
-            float y = (float) i / height;
+            float x = (float) j / width / scale;
+            float y = (float) i / height / scale;
+
+            float amplitude = params.initialAmplitude;
+            float frequency = 1;
+            float noiseHeight = 0;
+
+            for (int k = 0; k < params.octaves; k++) {
+                float n = (float) pn.noise(x * frequency, y * frequency, z);
+                noiseHeight += n * amplitude;
+
+                // advance
+                amplitude *= params.persistence;
+                frequency *= params.lacunarity;
+            }
 
             // calculate noise
-            float n = (float) pn.noise(x * SCALE, y * SCALE, z);
-            textureData[kk + 0] = n;
-            textureData[kk + 1] = n;
-            textureData[kk + 2] = n;
+            textureData[kk + 0] = noiseHeight;
+            textureData[kk + 1] = noiseHeight;
+            textureData[kk + 2] = noiseHeight;
             kk += 3;
         }
     }
@@ -84,10 +106,17 @@ void render() {
     const int size = 2;
 
     // update texture
+    NoiseParams params{};
+    params.z = SDL_GetTicks() / 1000.f;
+    params.initialAmplitude = 0.5;
+    params.octaves = 3;
+    params.persistence = 0.57;
+    params.lacunarity = 2;
+
     static PerlinNoise pn;
     int width = 128, height = 128;
     float *textureData = new float[width * height * 3];
-    generateNoiseTexture(textureData, pn, width, height, SDL_GetTicks() / 1000.);
+    generateNoiseTexture(textureData, pn, width, height, 0.1, params);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
 
     // Draw a "ground"
