@@ -15,6 +15,7 @@ class Gui {
     int mouseX, mouseY;
     bool isInsideAWindow;
     int width, height;
+    int changingType = -1;
 
 public:
     Gui(SDL_Window *window);
@@ -29,6 +30,8 @@ public:
     void editor(const char *string, NoiseParams &params);
 
     void resize(const int width, const int height);
+
+    void evaluateInsideAWindow();
 };
 
 #endif //GUI_H

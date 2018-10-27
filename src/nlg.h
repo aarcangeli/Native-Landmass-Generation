@@ -14,6 +14,7 @@ struct Color {
 };
 
 struct TerrainType {
+    std::string name;
     float height;
     Color color;
 };
@@ -22,6 +23,8 @@ struct NoiseParams {
     DrawMode mode = DRAW_MODE_NOISE;
     int realtime = 0;
     int refreshRequested = 1;
+
+    float scale = 0.3;
 
     float z = 0;
     int octaves = 3;

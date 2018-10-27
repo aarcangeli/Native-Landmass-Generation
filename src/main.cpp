@@ -21,8 +21,7 @@ GLuint texture;
 NoiseParams params;
 
 // Generate a random texture tgb
-void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, float scale,
-                          NoiseParams &params) {
+void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, NoiseParams &params) {
 
     // get level range
     float level = 0;
@@ -31,13 +30,15 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
         level += amplitude;
         amplitude *= params.persistence;
     }
+    level = level * 0.7f;
 
+    float scale = params.scale;
     float z = params.z;
     unsigned int kk = 0;
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            float x = (float) j / width / scale;
-            float y = (float) i / height / scale;
+            float x = (j - width / 2.f) / width / scale;
+            float y = (i - height / 2.f) / height / scale;
 
             float amplitude = 1;
             float frequency = 1;
@@ -61,6 +62,9 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
             // calculate noise
             if (params.mode == DRAW_MODE_COLOURS) {
                 // get color
+                textureData[kk + 0] = 0;
+                textureData[kk + 1] = 0;
+                textureData[kk + 2] = 0;
                 for (auto it : params.types) {
                     if (noiseHeight <= it.height) {
                         textureData[kk + 0] = it.color.red;
@@ -142,17 +146,15 @@ void render() {
     // update texture
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    if (params.refreshRequested) params.z = rand();
-    if (params.realtime || params.refreshRequested) {
-        static PerlinNoise pn;
-        params.z += delta / 1000.f;
+    if (params.refreshRequested) params.z = rand() * 10;
+    if (params.realtime) params.z += delta / 1000.f;
+    static PerlinNoise pn;
 
-        int width = 128, height = 128;
-        float *textureData = new float[width * height * 3];
-        generateNoiseTexture(textureData, pn, width, height, 0.1, params);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
-        params.refreshRequested = false;
-    }
+    int width = 128, height = 128;
+    float *textureData = new float[width * height * 3];
+    generateNoiseTexture(textureData, pn, width, height, params);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+    params.refreshRequested = false;
 
     // Draw a "ground"
     glDisable(GL_TEXTURE_2D);
@@ -202,9 +204,19 @@ int main() {
 
     // init param
     params.types.emplace_back();
-    params.types.back() = {0.4, {0, 0, 1}};
+    params.types.back() = {"Deep Water", 0.3, {52 / 255.f, 98 / 255.f, 195 / 255.f}};
     params.types.emplace_back();
-    params.types.back() = {1, {0, 1, 0}};
+    params.types.back() = {"Water", 0.4, {54 / 255.f, 102 / 255.f, 199 / 255.f}};
+    params.types.emplace_back();
+    params.types.back() = {"Sand", 0.45, {211 / 255.f, 206 / 255.f, 126 / 255.f}};
+    params.types.emplace_back();
+    params.types.back() = {"Grass", 0.6, {63 / 255.f, 106 / 255.f, 19 / 255.f}};
+    params.types.emplace_back();
+    params.types.back() = {"Grass 2", 0.7, {94 / 255.f, 68 / 255.f, 64 / 255.f}};
+    params.types.emplace_back();
+    params.types.back() = {"Rock", 0.8, {75 / 255.f, 60 / 255.f, 57 / 255.f}};
+    params.types.emplace_back();
+    params.types.back() = {"Snow", 1, {1, 1, 1}};
 
     while (true) {
         SDL_Event event;
