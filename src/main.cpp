@@ -7,24 +7,57 @@
 #include <iostream>
 
 #include "CameraHandler.h"
+#include "PerlinNoise.h"
 
 using namespace std;
 
 const int WIDTH = 1280;
 const int HEIGHT = 720;
 
+GLuint texture;
+
+// Generate a random texture tgb
+void generateNoiseTexture(PerlinNoise &pn, float *textureData, int width, int height) {
+    const int SCALE = 10;
+    unsigned int kk = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            float x = (float) j / width;
+            float y = (float) i / height;
+
+            // calculate noise
+            float n = (float) pn.noise(x * SCALE, y * SCALE, 0.8);
+            textureData[kk + 0] = n;
+            textureData[kk + 1] = n;
+            textureData[kk + 2] = n;
+            kk += 3;
+        }
+    }
+}
+
 void InitGL() {
+    // Setup buffers
     glViewport(0, 0, WIDTH, HEIGHT);
     glClearColor(0.3, 0.3, 0.3, 1);
     glClearDepth(1);
-    glShadeModel(GL_SMOOTH);
 
+    // Setup depth test
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    // Setup projection camera matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45, (float) WIDTH / HEIGHT, 0.5, 1000);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glShadeModel(GL_SMOOTH);
+
+    // Create a texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 void drawGrid() {
@@ -48,55 +81,43 @@ void drawGrid() {
 }
 
 void render() {
+    const int size = 2;
+
+    // update texture
+    static int lastUpdate = -1;
+    uint32_t now = SDL_GetTicks();
+    if (lastUpdate < 0 || now - lastUpdate > 1000) {
+        PerlinNoise pn{now};
+        int width = 128, height = 128;
+        float *textureData = new float[width * height * 3];
+        generateNoiseTexture(pn, textureData, width, height);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+        lastUpdate = now;
+    }
+
     // Draw a "ground"
+    glDisable(GL_TEXTURE_2D);
     drawGrid();
 
     // Draw a cube
-    glTranslated(0, 1, 0);
+    glTranslated(0, 0.06, 0);
+    glColor3f(1, 1, 1);
 
+    glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
 
-    // front
-    glColor3f(1, 1, 1);
-    glVertex3d(-1, -1, 1);
-    glVertex3d(-1, 1, 1);
-    glVertex3d(1, 1, 1);
-    glVertex3d(1, -1, 1);
-
-    // right
-    glColor3f(0, 0, 1);
-    glVertex3d(1, -1, -1);
-    glVertex3d(1, 1, -1);
-    glVertex3d(1, 1, 1);
-    glVertex3d(1, -1, 1);
-
-    // left
-    glColor3f(0, 1, 0);
-    glVertex3d(-1, -1, -1);
-    glVertex3d(-1, 1, -1);
-    glVertex3d(-1, 1, 1);
-    glVertex3d(-1, -1, 1);
-
-    // back
-    glColor3f(1, 1, 0);
-    glVertex3d(-1, -1, -1);
-    glVertex3d(-1, 1, -1);
-    glVertex3d(1, 1, -1);
-    glVertex3d(1, -1, -1);
-
     // top
-    glColor3f(1, 0.5, 0);
-    glVertex3d(-1, 1, -1);
-    glVertex3d(1, 1, -1);
-    glVertex3d(1, 1, 1);
-    glVertex3d(-1, 1, 1);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex3d(-size, 0, -size);
 
-    // bottom
-    glColor3f(1, 0, 0);
-    glVertex3d(-1, -1, -1);
-    glVertex3d(1, -1, -1);
-    glVertex3d(1, -1, 1);
-    glVertex3d(-1, -1, 1);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex3d(size, 0, -size);
+
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex3d(size, 0, size);
+
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex3d(-size, 0, size);
 
     glEnd();
 }
