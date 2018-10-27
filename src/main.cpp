@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "CameraHandler.h"
+
 using namespace std;
 
 const int WIDTH = 1280;
@@ -46,20 +48,8 @@ void drawGrid() {
 }
 
 void render() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-
-    glLoadIdentity();
-
-    glTranslated(0, 0, -10);
-    glRotated(45, 1, 0, 0);
-    glRotated(45, 0, 1, 0);
-
     // Draw a "ground"
     drawGrid();
-
-    double cyclePerSecond = 0.5;
-    glRotated(SDL_GetTicks() / 1000. * cyclePerSecond * 360, 0, 1, 0);
 
     // Draw a cube
     glTranslated(0, 1, 0);
@@ -105,6 +95,8 @@ void render() {
 }
 
 int main() {
+    CameraHandler camera;
+
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *window = SDL_CreateWindow("Native Procedural Cave Generation", SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
@@ -123,6 +115,8 @@ int main() {
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
+            if (camera.handleEvent(event)) continue;
+
             switch (event.type) {
                 case SDL_QUIT:
                     SDL_Quit();
@@ -135,7 +129,15 @@ int main() {
                     }
                     break;
             }
+
         }
+
+        // setup camera
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        camera.applyViewMatrix();
 
         render();
         SDL_GL_SwapWindow(window);
