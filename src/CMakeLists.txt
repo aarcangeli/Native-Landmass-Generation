@@ -5,13 +5,13 @@ include_directories(
 )
 
 file(GLOB_RECURSE SOURCES *.cpp)
-add_executable(NPCG ${SOURCES})
+add_executable(NLG ${SOURCES})
 
 target_link_libraries(
-        NPCG
+        NLG
         ${SDL2_LIBRARY}
 )
 
-install(TARGETS NPCG RUNTIME DESTINATION ${OUTPUT_DIRECTORY})
+install(TARGETS NLG RUNTIME DESTINATION ${OUTPUT_DIRECTORY})
 
-sdl_add_binaries(NPCG)
+sdl_add_binaries(NLG)

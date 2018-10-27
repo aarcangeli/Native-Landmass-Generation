@@ -105,7 +105,7 @@ int main() {
     CameraHandler camera;
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window = SDL_CreateWindow("Native Procedural Cave Generation", SDL_WINDOWPOS_CENTERED,
+    SDL_Window *window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 
     if (!window) {

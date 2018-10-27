@@ -1,5 +1,5 @@
-#ifndef NPCG_CAMERAHANDLER_H
-#define NPCG_CAMERAHANDLER_H
+#ifndef CAMERAHANDLER_H
+#define CAMERAHANDLER_H
 
 #include <SDL2/SDL.h>
 
@@ -29,4 +29,4 @@ private:
 
 };
 
-#endif //NPCG_CAMERAHANDLER_H
+#endif //CAMERAHANDLER_H
