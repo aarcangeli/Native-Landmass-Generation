@@ -18,7 +18,7 @@ GLuint texture;
 
 struct NoiseParams {
     float z;
-    float initialAmplitude;
+    float levelMin = 0, levelMax = 1;
     int octaves;
     float persistence;
     float lacunarity;
@@ -35,18 +35,22 @@ generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height,
             float x = (float) j / width / scale;
             float y = (float) i / height / scale;
 
-            float amplitude = params.initialAmplitude;
+            float amplitude = 1;
             float frequency = 1;
             float noiseHeight = 0;
 
             for (int k = 0; k < params.octaves; k++) {
-                float n = (float) pn.noise(x * frequency, y * frequency, z);
+                // n is in range [-1,1]
+                float n = (float) pn.noise(x * frequency, y * frequency, z) * 2 - 1;
                 noiseHeight += n * amplitude;
 
                 // advance
                 amplitude *= params.persistence;
                 frequency *= params.lacunarity;
             }
+
+            // apply level transform
+            noiseHeight = (noiseHeight - params.levelMin) / (params.levelMax - params.levelMin);
 
             // calculate noise
             textureData[kk + 0] = noiseHeight;
@@ -108,9 +112,12 @@ void render() {
     // update texture
     NoiseParams params{};
     params.z = SDL_GetTicks() / 1000.f;
-    params.initialAmplitude = 0.5;
+    // first octave range is [-1,1], second is [.5,.5], third is [.25,.25]
+    // total range is [-1.75,1,75]
+    params.levelMin = -1.4f;
+    params.levelMax = 1.4f;
     params.octaves = 3;
-    params.persistence = 0.57;
+    params.persistence = 0.5;
     params.lacunarity = 2;
 
     static PerlinNoise pn;
