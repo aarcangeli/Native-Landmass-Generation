@@ -51,9 +51,21 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
             noiseHeight = (noiseHeight - params.levelMin) / (params.levelMax - params.levelMin);
 
             // calculate noise
-            textureData[kk + 0] = noiseHeight;
-            textureData[kk + 1] = noiseHeight;
-            textureData[kk + 2] = noiseHeight;
+            if (params.mode == DRAW_MODE_COLOURS) {
+                // get color
+                for (auto it : params.types) {
+                    if (noiseHeight <= it.height) {
+                        textureData[kk + 0] = it.color.red;
+                        textureData[kk + 1] = it.color.green;
+                        textureData[kk + 2] = it.color.blue;
+                        break;
+                    }
+                }
+            } else {
+                textureData[kk + 0] = noiseHeight;
+                textureData[kk + 1] = noiseHeight;
+                textureData[kk + 2] = noiseHeight;
+            }
             kk += 3;
         }
     }
@@ -67,7 +79,6 @@ void InitGL() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     // Setup buffers
-    glViewport(0, 0, WIDTH, HEIGHT);
     glClearColor(0.3, 0.3, 0.3, 1);
     glClearDepth(1);
 
@@ -78,7 +89,7 @@ void InitGL() {
     // Setup projection camera matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (float) WIDTH / HEIGHT, 0.5, 1000);
+    gluPerspective(45, (float) (WIDTH - SIDEBAR_WIDTH) / HEIGHT, 0.5, 1000);
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glShadeModel(GL_SMOOTH);
@@ -112,6 +123,8 @@ void drawGrid() {
 
 void render() {
     const int size = 2;
+
+    glViewport(0, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT);
 
     // update texture
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -169,6 +182,12 @@ int main() {
     InitGL();
     Gui gui{window};
     gui.resize(WIDTH, HEIGHT);
+
+    // init param
+    params.types.emplace_back();
+    params.types.back() = {0.4, {0, 0, 1}};
+    params.types.emplace_back();
+    params.types.back() = {1, {0, 1, 0}};
 
     while (true) {
         SDL_Event event;

@@ -1,7 +1,26 @@
 #ifndef NLG_H
 #define NLG_H
 
+#include "vector"
+#include "string"
+
+enum DrawMode {
+    DRAW_MODE_NOISE,
+    DRAW_MODE_COLOURS,
+};
+
+struct Color {
+    float red, green, blue;
+};
+
+struct TerrainType {
+    float height;
+    Color color;
+};
+
 struct NoiseParams {
+    DrawMode mode = DRAW_MODE_COLOURS;
+
     float z = 0;
     float levelMin = -1, levelMax = 1;
 
@@ -10,6 +29,8 @@ struct NoiseParams {
     float lacunarity = 2;
     float offsetX = 0;
     float offsetY = 0;
+
+    std::vector<TerrainType> types;
 };
 
 #endif //NLG_H

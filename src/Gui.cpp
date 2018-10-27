@@ -58,19 +58,26 @@ void Gui::resize(int _width, int _height) {
 void Gui::editor(const char *string, NoiseParams &params) {
     static nk_colorf bg;
 
-    int windowWidth = 200;
-    int windowHeight = 450;
+    int windowWidth = SIDEBAR_WIDTH;
+    int windowHeight = height;
     struct nk_rect bounds = nk_rect(width - windowWidth, 0, windowWidth, windowHeight);
     static NoiseParams defaultValues = params;
 
     if (nk_begin(ctx, "Noise", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
         nk_layout_row_dynamic(ctx, 30, 1);
-        nk_label(ctx, "Noice:", NK_TEXT_LEFT);
+        nk_label(ctx, "Mode:", NK_TEXT_LEFT);
+        if (nk_option_label(ctx, "Noise Map", params.mode == DRAW_MODE_NOISE)) params.mode = DRAW_MODE_NOISE;
+        if (nk_option_label(ctx, "Colour Map", params.mode == DRAW_MODE_COLOURS)) params.mode = DRAW_MODE_COLOURS;
+
+        nk_label(ctx, "Noise:", NK_TEXT_LEFT);
         nk_property_int(ctx, "Octaves:", 1, &params.octaves, 10, 1, 1);
         nk_property_float(ctx, "Persistence:", 0, &params.persistence, 1, 0.01, 0.01);
         nk_property_float(ctx, "Lacunarity:", 0, &params.lacunarity, 10, 0.05, 0.05);
-        nk_property_float(ctx, "Offset X:", -100, &params.offsetX, 100, 0.1, 0.1);
-        nk_property_float(ctx, "Offset Y:", -100, &params.offsetY, 100, 0.1, 0.1);
+        nk_layout_row_dynamic(ctx, 30, 3);
+        nk_label(ctx, "Offset:", NK_TEXT_LEFT);
+        nk_property_float(ctx, "X:", -100, &params.offsetX, 100, 0.1, 0.1);
+        nk_property_float(ctx, "Y:", -100, &params.offsetY, 100, 0.1, 0.1);
+        nk_layout_row_dynamic(ctx, 30, 1);
         if (nk_button_label(ctx, "Defaults")) {
             params.persistence = defaultValues.persistence;
             params.lacunarity = defaultValues.lacunarity;

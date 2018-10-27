@@ -7,6 +7,8 @@
 struct nk_context;
 struct nk_font_atlas;
 
+const int SIDEBAR_WIDTH = 250;
+
 class Gui {
     nk_context *ctx;
     nk_font_atlas *atlas;
