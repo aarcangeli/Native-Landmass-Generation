@@ -24,6 +24,14 @@ NoiseParams params;
 void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, float scale,
                           NoiseParams &params) {
 
+    // get level range
+    float level = 0;
+    float amplitude = 1;
+    for (int i = 0; i < params.octaves; ++i) {
+        level += amplitude;
+        amplitude *= params.persistence;
+    }
+
     float z = params.z;
     unsigned int kk = 0;
     for (int i = 0; i < height; i++) {
@@ -48,7 +56,7 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
             }
 
             // apply level transform
-            noiseHeight = (noiseHeight - params.levelMin) / (params.levelMax - params.levelMin);
+            noiseHeight = (noiseHeight + level) / (level * 2);
 
             // calculate noise
             if (params.mode == DRAW_MODE_COLOURS) {
@@ -97,8 +105,8 @@ void InitGL() {
     // Create a texture
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
 void drawGrid() {
@@ -122,6 +130,11 @@ void drawGrid() {
 }
 
 void render() {
+    int now = SDL_GetTicks();
+    static int lastUpdate = now;
+    int delta = now - lastUpdate;
+    lastUpdate = now;
+
     const int size = 2;
 
     glViewport(0, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT);
@@ -129,13 +142,17 @@ void render() {
     // update texture
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    params.z = SDL_GetTicks() / 1000.f;
+    if (params.refreshRequested) params.z = rand();
+    if (params.realtime || params.refreshRequested) {
+        static PerlinNoise pn;
+        params.z += delta / 1000.f;
 
-    static PerlinNoise pn;
-    int width = 128, height = 128;
-    float *textureData = new float[width * height * 3];
-    generateNoiseTexture(textureData, pn, width, height, 0.1, params);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+        int width = 128, height = 128;
+        float *textureData = new float[width * height * 3];
+        generateNoiseTexture(textureData, pn, width, height, 0.1, params);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+        params.refreshRequested = false;
+    }
 
     // Draw a "ground"
     glDisable(GL_TEXTURE_2D);

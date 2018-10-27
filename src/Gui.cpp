@@ -65,6 +65,8 @@ void Gui::editor(const char *string, NoiseParams &params) {
 
     if (nk_begin(ctx, "Noise", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
         nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, "View:", NK_TEXT_LEFT);
+        nk_radio_label(ctx, "Real Time", &params.realtime);
         nk_label(ctx, "Mode:", NK_TEXT_LEFT);
         if (nk_option_label(ctx, "Noise Map", params.mode == DRAW_MODE_NOISE)) params.mode = DRAW_MODE_NOISE;
         if (nk_option_label(ctx, "Colour Map", params.mode == DRAW_MODE_COLOURS)) params.mode = DRAW_MODE_COLOURS;
@@ -85,18 +87,8 @@ void Gui::editor(const char *string, NoiseParams &params) {
             params.offsetY = defaultValues.offsetY;
         }
 
-        nk_label(ctx, "Levels:", NK_TEXT_LEFT);
-        nk_property_float(ctx, "Min Level:", -2, &params.levelMin, 2, 0.05, 0.05);
-        nk_property_float(ctx, "Max Level:", -2, &params.levelMax, 2, 0.05, 0.05);
-        if (nk_button_label(ctx, "Automatic levels")) {
-            float level = 0;
-            float amplitude = 1;
-            for (int i = 0; i < params.octaves; ++i) {
-                level += amplitude;
-                amplitude *= params.persistence;
-            }
-            params.levelMin = -level;
-            params.levelMax = level;
+        if (!params.realtime) {
+            if (nk_button_label(ctx, "Generate")) params.refreshRequested = 1;
         }
     }
 

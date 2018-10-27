@@ -19,11 +19,11 @@ struct TerrainType {
 };
 
 struct NoiseParams {
-    DrawMode mode = DRAW_MODE_COLOURS;
+    DrawMode mode = DRAW_MODE_NOISE;
+    int realtime = 0;
+    int refreshRequested = 1;
 
     float z = 0;
-    float levelMin = -1, levelMax = 1;
-
     int octaves = 3;
     float persistence = 0.5;
     float lacunarity = 2;
