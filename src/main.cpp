@@ -16,17 +16,22 @@ void InitGL() {
 }
 
 void render() {
-    double cyclePerSecond = 2;
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotated(SDL_GetTicks() / 1000. * cyclePerSecond * 360, 0, 1, 0);
+    const double cyclePerSecond = 2;
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2d(-0.9, -0.9);
-    glVertex2d(0.9, -0.9);
-    glVertex2d(0, 0.9);
-    glEnd();
+    glMatrixMode(GL_MODELVIEW);
+
+    for (int i = 0; i < 2; i++) {
+        glLoadIdentity();
+        glTranslated(-0.5 + i, 0, 0);
+        glRotated(SDL_GetTicks() / 1000. * cyclePerSecond * 360, 0, 1, 0);
+
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2d(-0.9, -0.9);
+        glVertex2d(0.9, -0.9);
+        glVertex2d(0, 0.9);
+        glEnd();
+    }
 }
 
 int main() {
