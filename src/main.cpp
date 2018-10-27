@@ -15,16 +15,16 @@ const int HEIGHT = 720;
 
 void InitGL() {
     glViewport(0, 0, WIDTH, HEIGHT);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.3, 0.3, 0.3, 1);
     glClearDepth(1);
     glShadeModel(GL_SMOOTH);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (float) WIDTH / HEIGHT, 0.1, 1000);
+    gluPerspective(45, (float) WIDTH / HEIGHT, 0.5, 1000);
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LESS);
 }
 
 void drawGrid() {
@@ -90,6 +90,13 @@ void render() {
     glVertex3d(1, 1, -1);
     glVertex3d(1, 1, 1);
     glVertex3d(-1, 1, 1);
+
+    // bottom
+    glColor3f(1, 0, 0);
+    glVertex3d(-1, -1, -1);
+    glVertex3d(1, -1, -1);
+    glVertex3d(1, -1, 1);
+    glVertex3d(-1, -1, 1);
 
     glEnd();
 }
