@@ -36,8 +36,10 @@ void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int he
             float noiseHeight = 0;
 
             for (int k = 0; k < params.octaves; k++) {
+                float mapX = x * frequency + params.offsetX;
+                float mapY = y * frequency + params.offsetY;
                 // n is in range [-1,1]
-                float n = (float) pn.noise(x * frequency, y * frequency, z) * 2 - 1;
+                float n = (float) pn.noise(mapX, mapY, z) * 2 - 1;
                 noiseHeight += n * amplitude;
 
                 // advance

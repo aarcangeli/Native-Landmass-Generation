@@ -59,7 +59,7 @@ void Gui::editor(const char *string, NoiseParams &params) {
     static nk_colorf bg;
 
     int windowWidth = 200;
-    int windowHeight = 350;
+    int windowHeight = 450;
     struct nk_rect bounds = nk_rect(width - windowWidth, 0, windowWidth, windowHeight);
     static NoiseParams defaultValues = params;
 
@@ -69,8 +69,13 @@ void Gui::editor(const char *string, NoiseParams &params) {
         nk_property_int(ctx, "Octaves:", 1, &params.octaves, 10, 1, 1);
         nk_property_float(ctx, "Persistence:", 0, &params.persistence, 1, 0.01, 0.01);
         nk_property_float(ctx, "Lacunarity:", 0, &params.lacunarity, 10, 0.05, 0.05);
+        nk_property_float(ctx, "Offset X:", -100, &params.offsetX, 100, 0.1, 0.1);
+        nk_property_float(ctx, "Offset Y:", -100, &params.offsetY, 100, 0.1, 0.1);
         if (nk_button_label(ctx, "Defaults")) {
-            params = defaultValues;
+            params.persistence = defaultValues.persistence;
+            params.lacunarity = defaultValues.lacunarity;
+            params.offsetX = defaultValues.offsetX;
+            params.offsetY = defaultValues.offsetY;
         }
 
         nk_label(ctx, "Levels:", NK_TEXT_LEFT);
