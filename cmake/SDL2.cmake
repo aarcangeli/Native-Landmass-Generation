@@ -23,7 +23,7 @@ if (MINGW)
     endif ()
 
     set(SDL2_INCLUDE_DIR ${SDL2_BINARY_HOME}/${postfix}/include)
-    set(SDL2_LIBRARY ${SDL2_BINARY_HOME}/${postfix}/lib/libSDL2.dll.a opengl32)
+    set(SDL2_LIBRARY ${SDL2_BINARY_HOME}/${postfix}/lib/libSDL2.dll.a opengl32 glu32)
     set(SDL2_RUNTIME_LIBRARY ${SDL2_BINARY_HOME}/${postfix}/bin/SDL2.dll)
 
 else ()

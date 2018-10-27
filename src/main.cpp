@@ -1,6 +1,8 @@
 #define SDL_MAIN_HANDLED
+
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 #include <iostream>
 
@@ -13,25 +15,26 @@ void InitGL() {
     glViewport(0, 0, WIDTH, HEIGHT);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glShadeModel(GL_SMOOTH);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45, (float) WIDTH / HEIGHT, 0.1, 1000);
+    glTranslated(0, 0, -5);
 }
 
 void render() {
-    const double cyclePerSecond = 2;
-
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
 
-    for (int i = 0; i < 2; i++) {
-        glLoadIdentity();
-        glTranslated(-0.5 + i, 0, 0);
-        glRotated(SDL_GetTicks() / 1000. * cyclePerSecond * 360, 0, 1, 0);
+    glLoadIdentity();
 
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2d(-0.9, -0.9);
-        glVertex2d(0.9, -0.9);
-        glVertex2d(0, 0.9);
-        glEnd();
-    }
+    // Draw a quad
+    glBegin(GL_QUADS);
+    glVertex2d(-1, -1);
+    glVertex2d(-1, 1);
+    glVertex2d(1, 1);
+    glVertex2d(1, -1);
+    glEnd();
 }
 
 int main() {
