@@ -10,6 +10,7 @@
 #include "PerlinNoise.h"
 #include "Gui.h"
 #include "nlg.h"
+#include "math.h"
 
 using namespace std;
 
@@ -126,7 +127,7 @@ void InitGL() {
 
 void render() {
     const int width = 128, height = 128;
-    const double meshSize = 2;
+    const double meshSize = 3;
 
     // Update timer
     int now = SDL_GetTicks();
@@ -155,6 +156,15 @@ void render() {
     // update texture
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+
+    // apply curve
+    int ii = 0;
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            float &it = noiseData[ii++];
+            it = (float) pow(10, it);
+        }
+    }
 
     // Draw a cube
     glPushMatrix();
@@ -197,6 +207,7 @@ void render() {
     glPopMatrix();
 
     // Draw a little gizmo
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glViewport(0, 0, 50, 50);
     glBegin(GL_LINES);
