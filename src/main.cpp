@@ -17,7 +17,7 @@ const int HEIGHT = 720;
 GLuint texture;
 
 // Generate a random texture tgb
-void generateNoiseTexture(PerlinNoise &pn, float *textureData, int width, int height) {
+void generateNoiseTexture(float *textureData, PerlinNoise &pn, int width, int height, double z) {
     const int SCALE = 10;
     unsigned int kk = 0;
     for (int i = 0; i < height; i++) {
@@ -26,7 +26,7 @@ void generateNoiseTexture(PerlinNoise &pn, float *textureData, int width, int he
             float y = (float) i / height;
 
             // calculate noise
-            float n = (float) pn.noise(x * SCALE, y * SCALE, 0.8);
+            float n = (float) pn.noise(x * SCALE, y * SCALE, z);
             textureData[kk + 0] = n;
             textureData[kk + 1] = n;
             textureData[kk + 2] = n;
@@ -84,16 +84,11 @@ void render() {
     const int size = 2;
 
     // update texture
-    static int lastUpdate = -1;
-    uint32_t now = SDL_GetTicks();
-    if (lastUpdate < 0 || now - lastUpdate > 1000) {
-        PerlinNoise pn{now};
-        int width = 128, height = 128;
-        float *textureData = new float[width * height * 3];
-        generateNoiseTexture(pn, textureData, width, height);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
-        lastUpdate = now;
-    }
+    static PerlinNoise pn;
+    int width = 128, height = 128;
+    float *textureData = new float[width * height * 3];
+    generateNoiseTexture(textureData, pn, width, height, SDL_GetTicks() / 1000.);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
 
     // Draw a "ground"
     glDisable(GL_TEXTURE_2D);
