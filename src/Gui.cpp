@@ -13,6 +13,7 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
 #define NK_SDL_GL2_IMPLEMENTATION
+#define NK_BUTTON_TRIGGER_ON_RELEASE
 
 #include "nuklear.h"
 #include "nuklear_sdl_gl2.h"
@@ -25,6 +26,7 @@ Gui::Gui(SDL_Window *window) {
 
 void Gui::inputBegin() {
     nk_input_begin(ctx);
+    SDL_CaptureMouse(SDL_TRUE);
 }
 
 int Gui::inputhandleEvent(SDL_Event &event) {
@@ -33,18 +35,35 @@ int Gui::inputhandleEvent(SDL_Event &event) {
     ctx->input.mouse.ungrab = 0;
     ctx->input.mouse.grabbed = 0;
 
-    if (event.type == SDL_MOUSEMOTION) {
-        mouseX = event.motion.x;
-        mouseY = event.motion.y;
+    bool isAnyActive = nk_item_is_any_active(ctx) != 0;
+
+    if (!isAnyActive && event.type == SDL_MOUSEWHEEL) {
+        // wheel should not be grabbed by window
+        return false;
+    }
+
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+        isGrabbingGui = isAnyActive;
+        isGrabbingFrame = !isAnyActive;
+    }
+
+    if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+        isGrabbingGui = false;
+        isGrabbingFrame = false;
+    }
+
+    // when a window has focus capture all keyboard
+    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_TEXTINPUT) {
+        if (isAnyActive) nk_sdl_handle_event(&event);
+        return isAnyActive;
     }
 
     // mark input as grabbed just if mouse is inside a window
-    return nk_sdl_handle_event(&event) && isInsideAWindow;
+    return (nk_sdl_handle_event(&event) && isAnyActive && !isGrabbingFrame) || isGrabbingGui;
 }
 
 void Gui::inputEnd() {
     nk_input_end(ctx);
-    isInsideAWindow = false;
 }
 
 void Gui::render() {
@@ -82,10 +101,14 @@ void Gui::editor(const char *string, NoiseParams &params) {
         nk_property_float(ctx, "Y:", -100, &params.offsetY, 100, 0.1, 0.1);
         nk_layout_row_dynamic(ctx, 30, 1);
         if (nk_button_label(ctx, "Defaults")) {
+            params.octaves = defaultValues.octaves;
             params.persistence = defaultValues.persistence;
             params.lacunarity = defaultValues.lacunarity;
             params.offsetX = defaultValues.offsetX;
             params.offsetY = defaultValues.offsetY;
+        }
+        if (!params.realtime) {
+            if (nk_button_label(ctx, "Generate")) params.refreshRequested = 1;
         }
 
         nk_label(ctx, "Terrain types:", NK_TEXT_LEFT);
@@ -98,13 +121,7 @@ void Gui::editor(const char *string, NoiseParams &params) {
                 changingType = i;
             }
         }
-
-        if (!params.realtime) {
-            if (nk_button_label(ctx, "Generate")) params.refreshRequested = 1;
-        }
     }
-
-    evaluateInsideAWindow();
     nk_end(ctx);
 
     if (changingType >= params.types.size()) {
@@ -125,7 +142,7 @@ void Gui::editor(const char *string, NoiseParams &params) {
 
             // color
             nk_layout_row_dynamic(ctx, 120, 1);
-            nk_colorf bg {type.color.red, type.color.green, type.color.blue};
+            nk_colorf bg{type.color.red, type.color.green, type.color.blue};
             bg = nk_color_picker(ctx, bg, NK_RGB);
             nk_layout_row_dynamic(ctx, 25, 1);
             bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
@@ -135,17 +152,6 @@ void Gui::editor(const char *string, NoiseParams &params) {
 
             if (nk_button_label(ctx, "Close")) changingType = -1;
         }
-        evaluateInsideAWindow();
         nk_end(ctx);
-    }
-}
-
-void Gui::evaluateInsideAWindow() {
-    struct nk_rect rect = nk_window_get_bounds(ctx);
-    if (mouseX >= rect.x &&
-        mouseY >= rect.y &&
-        mouseX < rect.x + rect.w &&
-        mouseY < rect.y + rect.h) {
-        isInsideAWindow = true;
     }
 }

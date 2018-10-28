@@ -16,6 +16,7 @@ using namespace std;
 
 const int WIDTH = 1280;
 const int HEIGHT = 720;
+bool wireframe = false;
 
 GLuint texture;
 
@@ -138,6 +139,7 @@ void render() {
     // Setup OpenGL
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT);
+    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
     // refresh z param
     if (params.refreshRequested) params.z = rand() * 10;
@@ -274,6 +276,14 @@ int main() {
 
             if (gui.inputhandleEvent(event)) continue;
             if (camera.handleEvent(event)) continue;
+
+            if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_w:
+                        wireframe = !wireframe;
+                        continue;
+                }
+            }
         }
         gui.inputEnd();
 
@@ -288,6 +298,7 @@ int main() {
 
         gui.editor("Parameters", params);
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         gui.render();
 
         SDL_GL_SwapWindow(window);

@@ -12,10 +12,10 @@ const int SIDEBAR_WIDTH = 250;
 class Gui {
     nk_context *ctx;
     nk_font_atlas *atlas;
-    int mouseX, mouseY;
-    bool isInsideAWindow;
     int width, height;
     int changingType = -1;
+    bool isGrabbingGui = false;
+    bool isGrabbingFrame = false;
 
 public:
     Gui(SDL_Window *window);
