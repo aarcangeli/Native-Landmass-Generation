@@ -1,5 +1,6 @@
 include(SDL2)
 include(nuklear)
+include(ResourceCompiler)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
@@ -7,6 +8,8 @@ include_directories(
 )
 
 file(GLOB_RECURSE SOURCES *.cpp)
+compile_resources(SOURCES glsl *.glsl)
+
 add_executable(NLG ${SOURCES})
 
 target_link_libraries(

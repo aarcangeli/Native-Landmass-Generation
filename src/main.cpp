@@ -11,6 +11,7 @@
 #include "Gui.h"
 #include "nlg.h"
 #include "math.h"
+#include "res_glsl.h"
 
 using namespace std;
 
