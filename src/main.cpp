@@ -8,6 +8,7 @@
 
 #include "CameraHandler.h"
 #include "PerlinNoise.h"
+#include "Mesh.h"
 #include "Shader.h"
 #include "Gui.h"
 #include "nlg.h"
@@ -20,6 +21,7 @@ const int WIDTH = 1280;
 const int HEIGHT = 720;
 bool wireframe = false;
 Shader mainShader;
+Mesh mesh;
 
 GLuint texture;
 
@@ -100,10 +102,20 @@ void convertNoiseMapToTexture(float *textureData, float *noiseData, int width, i
 }
 
 bool InitGL() {
+    if (glewInit() != GLEW_OK) {
+        printf("ERROR: Cannot inizialize glew\n");
+        return false;
+    }
+
     if (!mainShader.compile(glsl::standard_vs, glsl::standard_fs)) {
         printf("ERROR: Cannot compile phong shader\n");
         return false;
     }
+
+    if (!mesh.init()) return false;
+    mesh.setPositionAttribute(mainShader.getAttribLocation("position"));
+    mesh.setNormalAttribute(mainShader.getAttribLocation("normal"));
+    mesh.setTexCoordAttribute(mainShader.getAttribLocation("uv"));
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -136,6 +148,48 @@ bool InitGL() {
     return true;
 }
 
+void updateMesh(const float *noiseData, int width, int height, NoiseParams &params) {
+    // every cell of the matrix is mappet into a vertex
+    // so the number of vertices is the same as the number of items in noiseData
+    uint32_t numberOfVertices = (uint32_t) (width * height);
+
+    // each face has a vertex apart the last row and the last column
+    uint32_t numberOfFaces = numberOfVertices - width - height + 1;
+
+    mesh.resize(numberOfVertices, numberOfFaces);
+
+    // fill the vertices
+    uint32_t ii = 0;
+    auto &vertices = mesh.verticies;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            auto &v = vertices[ii];
+            v.x = v.u = (float) x / width;
+            v.y = noiseData[ii];
+            v.z = v.v = (float) y / width;
+
+            glTexCoord2f((float) x / width, (float) y / height);
+
+            ii++;
+        }
+    }
+
+    // fill the indexes
+    auto *face = &mesh.faces.front();
+    for (uint32_t y = 1; y < height; y++) {
+        for (uint32_t x = 1; x < width; x++) {
+            face->vertex1 = (x - 1) + (y - 1) * width;
+            face->vertex2 = (x - 1) + y * width;
+            face->vertex3 = x + y * width;
+            face->vertex4 = x + (y - 1) * width;
+            face++;
+        }
+    }
+
+    mesh.bind();
+    mesh.refresh();
+}
+
 void render() {
     const int width = 128, height = 128;
     const double meshSize = 3;
@@ -165,10 +219,6 @@ void render() {
     float *textureData = new float[width * height * 3];
     convertNoiseMapToTexture(textureData, noiseData, width, height, params);
 
-    // update texture
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
-
     // apply curve
     int ii = 0;
     for (int i = 0; i < width; ++i) {
@@ -178,52 +228,33 @@ void render() {
         }
     }
 
+    // update mesh
+    updateMesh(noiseData, width, height, params);
+
+    // update texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+
     mainShader.bind();
+    mesh.bind();
 
     // Draw a cube
     glPushMatrix();
     {
         glTranslated(0, 0.06, 0);
-        glTranslated(-meshSize / 2, 0, -meshSize / 2);
-        glColor3f(1, 1, 1);
+        glScaled(meshSize, 1, meshSize);
+        glTranslated(-0.5, 0, -0.5);
         glScalef(1, params.heightMultiplier * params.scale, 1);
 
-        glEnable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-
-        for (int y = 0; y < height - 1; y++) {
-            for (int x = 0; x < width - 1; x++) {
-
-                glTexCoord2f((float) x / width, (float) y / height);
-                glVertex3d(x * meshSize / width,
-                           noiseData[x + y * width],
-                           y * meshSize / height);
-
-                glTexCoord2f((float) x / width, (float) (y + 1) / height);
-                glVertex3d((x + 1) * meshSize / width,
-                           noiseData[(x + 1) + y * width],
-                           y * meshSize / height);
-
-                glTexCoord2f((float) (x + 1) / width, (float) (y + 1) / height);
-                glVertex3d((x + 1) * meshSize / width,
-                           noiseData[(x + 1) + (y + 1) * width],
-                           (y + 1) * meshSize / height);
-
-                glTexCoord2f((float) (x + 1) / width, (float) y / height);
-                glVertex3d(x * meshSize / width,
-                           noiseData[x + (y + 1) * width],
-                           (y + 1) * meshSize / height);
-            }
-        }
-
-        glEnd();
+        mesh.bind();
+        mesh.draw();
     }
     glPopMatrix();
 
     mainShader.unbind();
+    mesh.unbind();
 
     // Draw a little gizmo
-    glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
     glViewport(0, 0, 50, 50);
     glBegin(GL_LINES);
@@ -257,7 +288,6 @@ int main() {
 
     SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(1);
-    glewInit();
 
     if (!InitGL()) return 1;
     Gui gui{window};
