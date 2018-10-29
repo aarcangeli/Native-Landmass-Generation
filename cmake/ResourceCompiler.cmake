@@ -29,7 +29,7 @@ macro(compile_resources output_list namespace infile)
                 # These are the primary files that affect the output
                 DEPENDS ${CMAKE_MODULE_PATH}/ResourceCompiler.cmake "${it}"
                 COMMAND "${CMAKE_COMMAND}" -D_CMRC_GENERATE_MODE=TRUE "-DINPUT_FILE=${it}" "-DOUTPUT_FILE=${OUTPUT_FILE}" "-Dnamespace=${namespace}" "-DVAR_NAME=${it_name_we}" -P ${CMAKE_MODULE_PATH}/ResourceCompiler.cmake
-                COMMENT "Generating intermediate file for ${it_name} into ${OUTPUT_FILE}"
+                COMMENT "Generating resource file ${it_name} into ${OUTPUT_FILE}"
         )
         list(APPEND ${output_list} ${OUTPUT_FILE})
         set(CR_HEADER_FILE "${CR_HEADER_FILE}    // ${it}\n")

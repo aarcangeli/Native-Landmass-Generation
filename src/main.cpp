@@ -1,13 +1,13 @@
 #define SDL_MAIN_HANDLED
 
 #include <SDL2/SDL.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <GL/glew.h>
 
 #include <iostream>
 
 #include "CameraHandler.h"
 #include "PerlinNoise.h"
+#include "Shader.h"
 #include "Gui.h"
 #include "nlg.h"
 #include "math.h"
@@ -18,6 +18,7 @@ using namespace std;
 const int WIDTH = 1280;
 const int HEIGHT = 720;
 bool wireframe = false;
+Shader mainShader;
 
 GLuint texture;
 
@@ -97,7 +98,12 @@ void convertNoiseMapToTexture(float *textureData, float *noiseData, int width, i
     }
 }
 
-void InitGL() {
+bool InitGL() {
+    if (!mainShader.compile(glsl::standard_vs, glsl::standard_fs)) {
+        printf("ERROR: Cannot compile phong shader\n");
+        return false;
+    }
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -125,6 +131,8 @@ void InitGL() {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    return true;
 }
 
 void render() {
@@ -169,6 +177,8 @@ void render() {
         }
     }
 
+    mainShader.bind();
+
     // Draw a cube
     glPushMatrix();
     {
@@ -209,6 +219,8 @@ void render() {
     }
     glPopMatrix();
 
+    mainShader.unbind();
+
     // Draw a little gizmo
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
@@ -244,8 +256,9 @@ int main() {
 
     SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(1);
+    glewInit();
 
-    InitGL();
+    if (!InitGL()) return 1;
     Gui gui{window};
     gui.resize(WIDTH, HEIGHT);
 
