@@ -1,3 +1,8 @@
+include(unpack)
+
+set(GLEW_HOME "${LIBS_DIRECTORY}/glew")
+set(GLEW_UNPACK_DIR ${CMAKE_BINARY_DIR})
+set(GLEW_BINARY_HOME ${GLEW_UNPACK_DIR}/glew-2.0.0)
 
 if (MINGW)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -6,31 +11,14 @@ if (MINGW)
         set(GLEW_PACKAGE_NAME glew-2.0.0-mingw.zip)
     endif ()
 
-    set(GLEW_HOME "${LIBS_DIRECTORY}/glew")
     set(GLEW_PACKAGE "${GLEW_HOME}/${GLEW_PACKAGE_NAME}")
-    set(GLEW_DOWNLOAD_DIR ${CMAKE_BINARY_DIR})
-    set(GLEW_BINARY_HOME ${GLEW_DOWNLOAD_DIR}/glew-2.0.0)
 
     set(GLEW_INCLUDE_DIR ${GLEW_BINARY_HOME}/include)
     set(GLEW_LIBRARY ${GLEW_BINARY_HOME}/lib/libglew32.dll.a)
     set(GLEW_RUNTIME_LIBRARY ${GLEW_BINARY_HOME}/lib/glew32.dll)
 
-    if (NOT GLEW_EXTRACTED)
-        message(STATUS "Extracting ${GLEW_PACKAGE_NAME} into ${GLEW_DOWNLOAD_DIR}")
-        execute_process(
-                COMMAND ${CMAKE_COMMAND} -E tar xzf ${GLEW_PACKAGE}
-                WORKING_DIRECTORY ${GLEW_DOWNLOAD_DIR}
-                RESULT_VARIABLE retcode
-        )
-        if (NOT "${retcode}" STREQUAL "0")
-            message(FATAL_ERROR "Fatal error when extracting ${GLEW_PACKAGE}")
-        endif ()
+    unpack(GLEW ${GLEW_PACKAGE} ${GLEW_UNPACK_DIR})
 
-        set(GLEW_EXTRACTED ON CACHE BOOL "")
-    endif ()
-
-else ()
-    message(FATAL_ERROR "Unable to configure glew: Unknown platform")
 endif ()
 
 macro(glew_install_runtimes target)

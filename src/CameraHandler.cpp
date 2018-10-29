@@ -1,6 +1,6 @@
 #include "CameraHandler.h"
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include "iostream"
 #include <math.h>
 
