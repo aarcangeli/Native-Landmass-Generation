@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include "use_eigen.h"
 
 #include <iostream>
 

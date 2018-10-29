@@ -2,11 +2,13 @@ include(SDL2)
 include(nuklear)
 include(ResourceCompiler)
 include(glew)
+include(eigen)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
         ${NUKLEAR_INCLUDE_DIR}
         ${GLEW_INCLUDE_DIR}
+        ${EIGEN_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE SOURCES *.cpp)
@@ -20,7 +22,7 @@ target_link_libraries(
         ${GLEW_LIBRARY}
 )
 
-install(TARGETS NLG RUNTIME DESTINATION ${OUTPUT_DIRECTORY})
+sdl2_install_runtimes(NLG)
+glew_install_runtimes(NLG)
 
-sdl_add_binaries(NLG)
-glew_add_binaries(NLG)
+install(TARGETS NLG RUNTIME DESTINATION ${OUTPUT_DIRECTORY})

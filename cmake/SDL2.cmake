@@ -6,14 +6,18 @@ if (MINGW)
     set(SDL2_DOWNLOAD_DIR ${CMAKE_BINARY_DIR})
     set(SDL2_BINARY_HOME ${SDL2_DOWNLOAD_DIR}/SDL2-2.0.8)
 
-    message(STATUS "Extracting ${SDL2_PACKAGE_NAME} into ${SDL2_DOWNLOAD_DIR}")
-    execute_process(
-            COMMAND ${CMAKE_COMMAND} -E tar xzf ${SDL2_PACKAGE}
-            WORKING_DIRECTORY ${SDL2_DOWNLOAD_DIR}
-            RESULT_VARIABLE retcode
-    )
-    if (NOT "${retcode}" STREQUAL "0")
-        message(FATAL_ERROR "Fatal error when extracting ${SDL2_PACKAGE}")
+    if (NOT SDL2_EXTRACTED)
+        message(STATUS "Extracting ${SDL2_PACKAGE_NAME} into ${SDL2_DOWNLOAD_DIR}")
+        execute_process(
+                COMMAND ${CMAKE_COMMAND} -E tar xzf ${SDL2_PACKAGE}
+                WORKING_DIRECTORY ${SDL2_DOWNLOAD_DIR}
+                RESULT_VARIABLE retcode
+        )
+        if (NOT "${retcode}" STREQUAL "0")
+            message(FATAL_ERROR "Fatal error when extracting ${SDL2_PACKAGE}")
+        endif ()
+
+        set(SDL2_EXTRACTED ON CACHE BOOL "")
     endif ()
 
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -30,8 +34,8 @@ else ()
     message(FATAL_ERROR "Unable to configure SDL2: Unknown platform")
 endif ()
 
-macro(sdl_add_binaries target)
-    if (NOT ${SDL2_RUNTIME_LIBRARY})
+macro(sdl2_install_runtimes target)
+    if (SDL2_RUNTIME_LIBRARY)
         add_custom_command(TARGET ${target} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SDL2_RUNTIME_LIBRARY}
                 $<TARGET_FILE_DIR:${target}>)
