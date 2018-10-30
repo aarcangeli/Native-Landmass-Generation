@@ -25,7 +25,7 @@ struct NoiseParams {
     int refreshRequested = 1;
 
     float scale = 0.25;
-    float heightMultiplier = 0.25;
+    float heightMultiplier = 0.06;
 
     float z = 0;
     int octaves = 3;

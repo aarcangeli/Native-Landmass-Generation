@@ -262,6 +262,7 @@ void render() {
             for (int j = 0; j < height; ++j) {
                 float &it = noiseData[ii++];
                 it = (float) pow(10, it);
+                it = it * params.heightMultiplier;
             }
         }
 
@@ -273,6 +274,7 @@ void render() {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
     }
 
+    glBindTexture(GL_TEXTURE_2D, texture);
     mainShader.bind();
     mesh.bind();
 
@@ -280,9 +282,9 @@ void render() {
     glPushMatrix();
     {
         glTranslated(0, 0.06, 0);
-        glScaled(meshSize, 1, meshSize);
+        //
+        glScaled(meshSize, meshSize, meshSize);
         glTranslated(-0.5, 0, -0.5);
-        glScalef(1, params.heightMultiplier * params.scale, 1);
 
         mesh.bind();
         mesh.draw();
