@@ -218,7 +218,7 @@ void updateMesh(const float *noiseData, int width, int height, NoiseParams &para
 }
 
 void render() {
-    const int width = 128, height = 128;
+    const int size = 128;
     const double meshSize = 3;
     bool refresh = false;
 
@@ -246,33 +246,35 @@ void render() {
     glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
     // refresh z param
-    static int lastRealtime;
-    if (params.refreshRequested) {
-        params.z = rand() * 10;
-        refresh = true;
-    }
+    static NoiseParams lastParams;
     if (params.realtime) {
         params.z += delta / 1000.f;
         refresh = true;
     }
-    if (params.realtime != lastRealtime) refresh = true;
-    lastRealtime = params.realtime;
+    if (params.refreshRequested) {
+        params.z = rand() * 10;
+        refresh = true;
+    }
+    if (lastParams != params) {
+        lastParams = params;
+        refresh = true;
+    }
     params.refreshRequested = false;
 
     if (refresh) {
         // generate noise map
-        static float *noiseData = new float[width * height];
+        static float *noiseData = new float[size * size];
         static PerlinNoise pn;
-        generateNoiseMap(noiseData, pn, width, height, params);
+        generateNoiseMap(noiseData, pn, size, size, params);
 
         // convert noise map to texture
-        float *textureData = new float[width * height * 3];
-        convertNoiseMapToTexture(textureData, noiseData, width, height, params);
+        float *textureData = new float[size * size * 3];
+        convertNoiseMapToTexture(textureData, noiseData, size, size, params);
 
         // apply curve
         int ii = 0;
-        for (int i = 0; i < width; ++i) {
-            for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
                 float &it = noiseData[ii++];
                 it = (float) pow(10, it);
                 it = it * params.heightMultiplier;
@@ -280,11 +282,11 @@ void render() {
         }
 
         // update mesh
-        updateMesh(noiseData, width, height, params);
+        updateMesh(noiseData, size, size, params);
 
         // update texture
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
     }
 
     glBindTexture(GL_TEXTURE_2D, texture);

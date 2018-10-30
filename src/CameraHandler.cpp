@@ -9,15 +9,15 @@ using namespace std;
 bool CameraHandler::handleEvent(SDL_Event &event) {
     if (event.type == SDL_MOUSEMOTION) {
         if (event.motion.state & SDL_BUTTON_LMASK) {
-            rotationY += event.motion.xrel;
-            rotationX += event.motion.yrel;
+            rotationY += event.motion.xrel * DEG_PER_PIXEL;
+            rotationX += event.motion.yrel * DEG_PER_PIXEL;
             return true;
         }
     }
     if (event.type == SDL_MOUSEWHEEL) {
         if (event.wheel.y) {
             zoom -= event.wheel.y;
-            distance = pow(2, zoom) * DISTANCE_BASE;
+            distance = pow(1.2, zoom) * DISTANCE_BASE;
             return true;
         }
     }

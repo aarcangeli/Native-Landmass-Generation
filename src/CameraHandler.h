@@ -18,6 +18,7 @@ public:
 
 private:
     const int DISTANCE_BASE = 5;
+    const double DEG_PER_PIXEL = 0.35;
 
     // rotation
     double rotationY = 45;
