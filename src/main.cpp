@@ -17,8 +17,9 @@
 
 using namespace std;
 
-const int WIDTH = 1280;
-const int HEIGHT = 720;
+SDL_Window *window;
+const int WINDOW_WIDTH = 1280;
+const int WINDOW_HEIGHT = 720;
 bool wireframe = false;
 Shader mainShader;
 Mesh mesh;
@@ -134,7 +135,7 @@ bool InitGL() {
     // Setup projection camera matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (float) (WIDTH - SIDEBAR_WIDTH) / HEIGHT, 0.5, 1000);
+    gluPerspective(45, (float) (WINDOW_WIDTH - SIDEBAR_WIDTH) / WINDOW_HEIGHT, 0.5, 1000);
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glShadeModel(GL_SMOOTH);
@@ -227,9 +228,21 @@ void render() {
     int delta = now - lastUpdate;
     lastUpdate = now;
 
+    // show fps
+    static int lastFps = now;
+    static int count = 0;
+    count++;
+    if (now > lastFps + 500) {
+        double deltaTime = (double) (now - lastFps) / count;
+        string title = to_string(deltaTime) + "ms (" + to_string(1000.0 / deltaTime) + " fps)";
+        SDL_SetWindowTitle(window, title.c_str());
+        lastFps = now;
+        count = 0;
+    }
+
     // Setup OpenGL
     glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT);
+    glViewport(0, 0, WINDOW_WIDTH - SIDEBAR_WIDTH, WINDOW_HEIGHT);
     glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
     // refresh z param
@@ -318,8 +331,8 @@ int main() {
     CameraHandler camera;
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 
     if (!window) {
         cout << "Could not create window: " << SDL_GetError() << endl;
@@ -331,7 +344,7 @@ int main() {
 
     if (!InitGL()) return 1;
     Gui gui{window};
-    gui.resize(WIDTH, HEIGHT);
+    gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // init param
     params.types.emplace_back();
