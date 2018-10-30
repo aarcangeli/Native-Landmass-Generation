@@ -18,7 +18,7 @@ void Mesh::refresh() {
 #endif
 
     // build semantic
-    glBufferData(GL_ARRAY_BUFFER, verticies.size() * sizeof(Vertex), verticies.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size() * sizeof(Face), faces.data(), GL_DYNAMIC_DRAW);
 }
 
@@ -61,11 +61,45 @@ void Mesh::setTexCoordAttribute(GLint attribute) {
 }
 
 void Mesh::resize(uint32_t numberOfVertices, uint32_t numberOfFaces) {
-    verticies.resize(numberOfVertices);
+    vertices.resize(numberOfVertices);
     faces.resize(numberOfFaces);
 }
 
 void Mesh::draw() {
     GLsizei size = (GLsizei) (faces.size() * 4);
     glDrawElements(GL_QUADS, size, GL_UNSIGNED_INT, 0);
+    int t = sizeof(Eigen::Vector3f);
+    int m = sizeof(Vertex);
+    int s = 0;
+}
+
+void Mesh::calculateNormals() {
+    for (auto &it : vertices) {
+        it.avgFactor = 0;
+    }
+
+    for (auto &face : faces) {
+        // based on https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
+        auto &v1 = vertices[face.vertex1].position;
+        auto &u = vertices[face.vertex2].position - v1;
+        auto &v = vertices[face.vertex3].position - v1;
+
+        Eigen::Vector3f normal = {
+                (u[1] * v[2]) - (u[2] * v[1]),
+                (u[2] * v[0]) - (u[0] * v[2]),
+                (u[0] * v[1]) - (u[1] * v[0]),
+        };
+
+        applyNormal(face.vertex1, normal);
+        applyNormal(face.vertex2, normal);
+        applyNormal(face.vertex3, normal);
+        applyNormal(face.vertex4, normal);
+    }
+}
+
+void Mesh::applyNormal(uint64_t index, const Eigen::Vector3f &normal) {
+    auto &vertex = vertices[index];
+    int avgFactor = vertex.avgFactor;
+    vertex.normal = vertex.normal * avgFactor + normal * (avgFactor + 1);
+    vertex.avgFactor++;
 }

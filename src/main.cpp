@@ -160,17 +160,39 @@ void updateMesh(const float *noiseData, int width, int height, NoiseParams &para
 
     // fill the vertices
     uint32_t ii = 0;
-    auto &vertices = mesh.verticies;
+    auto &vertices = mesh.vertices;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             auto &v = vertices[ii];
-            v.x = v.u = (float) x / width;
-            v.y = noiseData[ii];
-            v.z = v.v = (float) y / width;
+            v.position = {(float) x / width, noiseData[ii], (float) y / width};
+            v.textCoord[0] = (float) x / width;
+            v.textCoord[1] = (float) y / width;
 
             glTexCoord2f((float) x / width, (float) y / height);
 
             ii++;
+        }
+    }
+
+    // fast normal calculation
+    if (params.realtime) {
+        ii = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                auto &v1 = vertices[ii];
+                if (x == 0 || y == 0) {
+                    v1.normal = {0, 1, 0};
+                } else {
+                    auto &u = vertices[ii - width].position - v1.position;
+                    auto &v = vertices[ii - 1].position - v1.position;
+                    v1.normal = {
+                            (u[1] * v[2]) - (u[2] * v[1]),
+                            (u[2] * v[0]) - (u[0] * v[2]),
+                            (u[0] * v[1]) - (u[1] * v[0]),
+                    };
+                }
+                ii++;
+            }
         }
     }
 
@@ -186,6 +208,10 @@ void updateMesh(const float *noiseData, int width, int height, NoiseParams &para
         }
     }
 
+    // this method is too expensive for real time
+    if (!params.realtime) {
+        mesh.calculateNormals();
+    }
     mesh.bind();
     mesh.refresh();
 }
@@ -193,6 +219,7 @@ void updateMesh(const float *noiseData, int width, int height, NoiseParams &para
 void render() {
     const int width = 128, height = 128;
     const double meshSize = 3;
+    bool refresh = false;
 
     // Update timer
     int now = SDL_GetTicks();
@@ -206,34 +233,45 @@ void render() {
     glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
     // refresh z param
-    if (params.refreshRequested) params.z = rand() * 10;
-    if (params.realtime) params.z += delta / 1000.f;
+    static int lastRealtime;
+    if (params.refreshRequested) {
+        params.z = rand() * 10;
+        refresh = true;
+    }
+    if (params.realtime) {
+        params.z += delta / 1000.f;
+        refresh = true;
+    }
+    if (params.realtime != lastRealtime) refresh = true;
+    lastRealtime = params.realtime;
     params.refreshRequested = false;
 
-    // generate noise map
-    float *noiseData = new float[width * height];
-    static PerlinNoise pn;
-    generateNoiseMap(noiseData, pn, width, height, params);
+    if (refresh) {
+        // generate noise map
+        static float *noiseData = new float[width * height];
+        static PerlinNoise pn;
+        generateNoiseMap(noiseData, pn, width, height, params);
 
-    // convert noise map to texture
-    float *textureData = new float[width * height * 3];
-    convertNoiseMapToTexture(textureData, noiseData, width, height, params);
+        // convert noise map to texture
+        float *textureData = new float[width * height * 3];
+        convertNoiseMapToTexture(textureData, noiseData, width, height, params);
 
-    // apply curve
-    int ii = 0;
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height; ++j) {
-            float &it = noiseData[ii++];
-            it = (float) pow(10, it);
+        // apply curve
+        int ii = 0;
+        for (int i = 0; i < width; ++i) {
+            for (int j = 0; j < height; ++j) {
+                float &it = noiseData[ii++];
+                it = (float) pow(10, it);
+            }
         }
+
+        // update mesh
+        updateMesh(noiseData, width, height, params);
+
+        // update texture
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
     }
-
-    // update mesh
-    updateMesh(noiseData, width, height, params);
-
-    // update texture
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, textureData);
 
     mainShader.bind();
     mesh.bind();

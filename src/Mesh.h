@@ -3,6 +3,7 @@
 
 #include "vector"
 #include "GL/glew.h"
+#include "use_eigen.h"
 
 /**
  * General purpose mesh buffer
@@ -18,12 +19,10 @@ class Mesh {
 public:
 
     struct Vertex {
-        // position
-        float x, y, z;
-        // normal
-        float nx, ny, nz;
-        // Texture Coordinates
-        float u, v;
+        Eigen::Vector3f position;
+        Eigen::Vector3f normal;
+        Eigen::Vector2f textCoord;
+        int avgFactor;
     };
 
     union Face {
@@ -46,13 +45,18 @@ public:
 
     void resize(uint32_t numberOfVertices, uint32_t numberOfFaces);
 
-    std::vector<Vertex> verticies;
+    std::vector<Vertex> vertices;
     std::vector<Face> faces;
     void draw();
+
+    void calculateNormals();
+
 private:
 
     GLuint arrayBufferObject, elementArrayBufferObject;
     GLint positionAttribute = -1, normalAttribute = -1, texCoordAttribute = -1;
+
+    void applyNormal(uint64_t index, const Eigen::Vector3f &normal);
 };
 
 
