@@ -42,15 +42,21 @@ int Gui::inputhandleEvent(SDL_Event &event) {
         return false;
     }
 
-    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-        isGrabbingGui = isAnyActive;
-        isGrabbingFrame = !isAnyActive;
+    if (event.type == SDL_MOUSEBUTTONDOWN) {
+        if (event.button.button == SDL_BUTTON_LEFT) isGrabbingGuiLeft = isAnyActive;
+        if (event.button.button == SDL_BUTTON_LEFT) isGrabbingLeft = !isAnyActive;
+        if (event.button.button == SDL_BUTTON_MIDDLE) isGrabbingMiddle = !isAnyActive;
+        if (event.button.button == SDL_BUTTON_RIGHT) isGrabbingRight = !isAnyActive;
     }
 
-    if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-        isGrabbingGui = false;
-        isGrabbingFrame = false;
+    if (event.type == SDL_MOUSEBUTTONUP) {
+        if (event.button.button == SDL_BUTTON_LEFT) isGrabbingGuiLeft = false;
+        if (event.button.button == SDL_BUTTON_LEFT) isGrabbingLeft = false;
+        if (event.button.button == SDL_BUTTON_MIDDLE) isGrabbingMiddle = false;
+        if (event.button.button == SDL_BUTTON_RIGHT) isGrabbingRight = false;
     }
+
+    if (isGrabbingLeft || isGrabbingMiddle || isGrabbingRight) return false;
 
     // when a window has focus capture all keyboard
     if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP || event.type == SDL_TEXTINPUT) {
@@ -59,7 +65,7 @@ int Gui::inputhandleEvent(SDL_Event &event) {
     }
 
     // mark input as grabbed just if mouse is inside a window
-    return (nk_sdl_handle_event(&event) && isAnyActive && !isGrabbingFrame) || isGrabbingGui;
+    return (nk_sdl_handle_event(&event) && isAnyActive) || isGrabbingGuiLeft;
 }
 
 void Gui::inputEnd() {

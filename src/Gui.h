@@ -15,8 +15,8 @@ class Gui {
     nk_font_atlas *atlas;
     int width, height;
     int changingType = -1;
-    bool isGrabbingGui = false;
-    bool isGrabbingFrame = false;
+    bool isGrabbingGuiLeft = false;
+    bool isGrabbingLeft = false, isGrabbingMiddle = false, isGrabbingRight = false;
     LandmassParams defaultValues;
     LandmassParams lastValues;
 
