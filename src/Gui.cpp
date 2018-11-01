@@ -75,11 +75,15 @@ void Gui::resize(int _width, int _height) {
     height = _height;
 }
 
-void Gui::editor(const char *string, NoiseParams &params) {
+void Gui::editor(const char *string, LandmassParams &params) {
+    if (isFirstEditor) {
+        defaultValues = params;
+        lastValues = params;
+    }
+
     int windowWidth = SIDEBAR_WIDTH;
     int windowHeight = height;
     struct nk_rect bounds = nk_rect(width - windowWidth, 0, windowWidth, windowHeight);
-    static NoiseParams defaultValues = params;
 
     if (nk_begin(ctx, "Noise", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
         nk_layout_row_dynamic(ctx, 30, 1);
@@ -154,4 +158,5 @@ void Gui::editor(const char *string, NoiseParams &params) {
         }
         nk_end(ctx);
     }
+    isFirstEditor = false;
 }
