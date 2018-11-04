@@ -14,6 +14,7 @@
 #include "landmass.h"
 #include "math.h"
 #include "res_glsl.h"
+#include "res_img.h"
 
 using namespace std;
 
