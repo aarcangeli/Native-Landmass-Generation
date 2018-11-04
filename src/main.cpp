@@ -30,6 +30,31 @@ GLuint texture;
 
 LandmassParams params;
 
+GLuint loadTextureFromRes(const char *name,
+                          const char *start, const char *end,
+                          GLint minFilter = GL_LINEAR,
+                          GLint magFilter = GL_LINEAR) {
+    GLuint ret;
+    glGenTextures(1, &ret);
+    glBindTexture(GL_TEXTURE_2D, ret);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    SDL_Surface *rawData = IMG_Load_RW(SDL_RWFromMem((void *) start, (int) (end - start)), 1);
+    if (!rawData) {
+        printf("ERROR: Cannot load %s\n", name);
+        return 0;
+    }
+    SDL_Surface *grass = SDL_CreateRGBSurfaceWithFormat(0, rawData->w, rawData->h, 8, SDL_PIXELFORMAT_RGBA32);
+    if (SDL_BlitSurface(rawData, nullptr, grass, nullptr) < 0) {
+        printf("ERROR: Cannot load %s: %s\n", name, SDL_GetError());
+        return 0;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grass->w, grass->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, grass->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+    return ret;
+}
+
 bool InitGL() {
     if (glewInit() != GLEW_OK) {
         printf("ERROR: Cannot inizialize glew\n");
@@ -69,10 +94,15 @@ bool InitGL() {
     glShadeModel(GL_SMOOTH);
 
     // Create a texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glGenTextures(1, &texture);
+//    glBindTexture(GL_TEXTURE_2D, texture);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // load texture
+    texture = loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
+
+    if (!texture) return false;
 
     return true;
 }
@@ -146,7 +176,7 @@ void render() {
 
         // update texture
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
     }
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -193,6 +223,11 @@ int main() {
     CameraHandler camera;
 
     SDL_Init(SDL_INIT_VIDEO);
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        cout << "Cannot load SDL_image: " << IMG_GetError() << endl;
+        return 1;
+    }
+
     window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 
