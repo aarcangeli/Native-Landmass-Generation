@@ -27,7 +27,6 @@ Shader mainShader;
 Mesh mesh;
 
 GLuint texture;
-
 LandmassParams params;
 
 GLuint loadTextureFromRes(const char *name,
@@ -99,12 +98,14 @@ bool InitGL() {
 //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    // load texture
-    texture = loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
+    // load textures
+    params.water.texture = loadTextureFromRes("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR);
+    params.sand.texture = loadTextureFromRes("sandy_grass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR);
+    params.grass.texture = loadTextureFromRes("grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR);
+    params.rock.texture = loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
+    params.snow.texture = loadTextureFromRes("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR);
 
-    if (!texture) return false;
-
-    return true;
+    return params.water.texture && params.sand.texture && params.grass.texture && params.rock.texture && params.snow.texture;
 }
 
 void render() {
@@ -176,7 +177,7 @@ void render() {
 
         // update texture
         glBindTexture(GL_TEXTURE_2D, texture);
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
     }
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -242,22 +243,6 @@ int main() {
     if (!InitGL()) return 1;
     Gui gui{window};
     gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    // init param
-    params.types.emplace_back();
-    params.types.back() = {"Deep Water", 0.3, {52 / 255.f, 98 / 255.f, 195 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Water", 0.4, {54 / 255.f, 102 / 255.f, 199 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Sand", 0.45, {211 / 255.f, 206 / 255.f, 126 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Grass", 0.6, {63 / 255.f, 106 / 255.f, 19 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Grass 2", 0.7, {94 / 255.f, 68 / 255.f, 64 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Rock", 0.8, {75 / 255.f, 60 / 255.f, 57 / 255.f}};
-    params.types.emplace_back();
-    params.types.back() = {"Snow", 1, {1, 1, 1}};
 
     while (true) {
         SDL_Event event;

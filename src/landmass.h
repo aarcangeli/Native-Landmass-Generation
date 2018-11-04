@@ -5,20 +5,15 @@
 #include "string"
 #include "PerlinNoise.h"
 #include "Mesh.h"
+#include "vector"
 
 enum DrawMode {
     DRAW_MODE_NOISE,
     DRAW_MODE_COLOURS,
 };
 
-struct Color {
-    float red, green, blue;
-};
-
 struct TerrainType {
-    std::string name;
-    float height;
-    Color color;
+    GLuint texture;
 };
 
 struct LandmassParams {
@@ -36,21 +31,12 @@ struct LandmassParams {
     float offsetX = 0;
     float offsetY = 0;
 
-    std::vector<TerrainType> types;
+    TerrainType water, sand, grass, rock, snow;
 };
-
-static bool operator==(const Color &a, const Color &b) {
-    return
-            a.red == b.red &&
-            a.green == b.green &&
-            a.blue == b.blue;
-}
 
 static bool operator==(const TerrainType &a, const TerrainType &b) {
     return
-            a.name == b.name &&
-            a.height == b.height &&
-            a.color == b.color;
+            a.texture == b.texture;
 }
 
 static bool operator==(const LandmassParams &a, const LandmassParams &b) {
@@ -64,8 +50,11 @@ static bool operator==(const LandmassParams &a, const LandmassParams &b) {
             a.persistence == b.persistence &&
             a.lacunarity == b.lacunarity &&
             a.offsetX == b.offsetX &&
-            a.offsetY == b.offsetY &&
-            a.types == b.types;
+            a.water == b.water &&
+            a.sand == b.sand &&
+            a.grass == b.grass &&
+            a.rock == b.rock &&
+            a.snow == b.snow;
 }
 
 static bool operator!=(LandmassParams &a, LandmassParams &b) {

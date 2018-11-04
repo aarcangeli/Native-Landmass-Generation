@@ -2,6 +2,7 @@
 #define GUI_H
 
 #include <SDL2/SDL.h>
+#include <vector>
 #include "landmass.h"
 
 struct nk_context;
@@ -14,7 +15,6 @@ class Gui {
     nk_context *ctx;
     nk_font_atlas *atlas;
     int width, height;
-    int changingType = -1;
     bool isGrabbingGuiLeft = false;
     bool isGrabbingLeft = false, isGrabbingMiddle = false, isGrabbingRight = false;
     LandmassParams defaultValues;
@@ -32,9 +32,7 @@ public:
     // custom editors
     void editor(const char *string, LandmassParams &params);
 
-    void resize(const int width, const int height);
-
-    void evaluateInsideAWindow();
+    void resize(int width, int height);
 };
 
 #endif //GUI_H

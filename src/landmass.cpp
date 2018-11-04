@@ -57,14 +57,6 @@ void convertNoiseMapToTexture(float *textureData, float *noiseData, int size, La
                 textureData[kk + 0] = 0;
                 textureData[kk + 1] = 0;
                 textureData[kk + 2] = 0;
-                for (auto it : params.types) {
-                    if (noiseHeight <= it.height) {
-                        textureData[kk + 0] = it.color.red;
-                        textureData[kk + 1] = it.color.green;
-                        textureData[kk + 2] = it.color.blue;
-                        break;
-                    }
-                }
             } else {
                 textureData[kk + 0] = noiseHeight;
                 textureData[kk + 1] = noiseHeight;

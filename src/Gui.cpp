@@ -120,49 +120,7 @@ void Gui::editor(const char *string, LandmassParams &params) {
         if (!params.realtime) {
             if (nk_button_label(ctx, "Generate")) params.refreshRequested = 1;
         }
-
-        nk_label(ctx, "Terrain types:", NK_TEXT_LEFT);
-        int size = params.types.size();
-        nk_property_int(ctx, "Size:", 0, &size, 10, 1, 1);
-        params.types.resize(size);
-        for (int i = 0; i < size; i++) {
-            TerrainType &type = params.types[i];
-            if (nk_button_label(ctx, type.name.c_str())) {
-                changingType = i;
-            }
-        }
     }
     nk_end(ctx);
-
-    if (changingType >= params.types.size()) {
-        changingType = -1;
-    }
-    if (changingType >= 0) {
-        TerrainType &type = params.types[changingType];
-        if (nk_begin(ctx, "Color", nk_rect(50, 50, 250, 400), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
-            // name
-            nk_layout_row_dynamic(ctx, 30, 1);
-            char name[512];
-            strcpy(name, type.name.c_str());
-            nk_edit_string_zero_terminated(ctx, NK_EDIT_SIMPLE, name, sizeof(name), nk_filter_ascii);
-            type.name = name;
-
-            // height
-            nk_property_float(ctx, "#Height:", 0, &type.height, 1, 0.01, 0.01);
-
-            // color
-            nk_layout_row_dynamic(ctx, 120, 1);
-            nk_colorf bg{type.color.red, type.color.green, type.color.blue};
-            bg = nk_color_picker(ctx, bg, NK_RGB);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-            bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-            bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-            type.color = {bg.r, bg.g, bg.b};
-
-            if (nk_button_label(ctx, "Close")) changingType = -1;
-        }
-        nk_end(ctx);
-    }
     isFirstEditor = false;
 }
