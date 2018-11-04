@@ -66,6 +66,7 @@ private:
 
     void tick();
     void setRelativeMouseMode() const;
+    inline bool shouldPreventWasd() const;
 };
 
 #endif //CAMERAHANDLER_H

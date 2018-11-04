@@ -63,22 +63,22 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
                 return true;
             case SDLK_w:
                 state[STATE_KEY_W] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_a:
                 state[STATE_KEY_A] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_s:
                 state[STATE_KEY_S] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_d:
                 state[STATE_KEY_D] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_q:
                 state[STATE_KEY_Q] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_e:
                 state[STATE_KEY_E] = event.key.state;
-                return true;
+                return shouldPreventWasd();
             case SDLK_f:
                 action = ACTION_FOCUS;
                 return true;
@@ -86,6 +86,10 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
     }
 
     return false;
+}
+
+bool CameraHandler::shouldPreventWasd() const {
+    return state[STATE_MOUSE_RIGHT];
 }
 
 void CameraHandler::setRelativeMouseMode() const {
