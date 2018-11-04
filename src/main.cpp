@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
+#include <SDL_image.h>
 #include <GL/glew.h>
 #include "use_eigen.h"
 
