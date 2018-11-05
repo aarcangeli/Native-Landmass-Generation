@@ -4,11 +4,15 @@ attribute vec3 position;
 attribute vec3 normal;
 attribute vec3 uv;
 
+varying vec3 positionViewSpace;
+varying vec3 normalViewSpace;
 varying vec2 texCoord;
 varying vec3 vNormal;
 varying vec3 normalDiff;
 
 void main() {
+    positionViewSpace = position;
+    normalViewSpace = normalize(normal);
     gl_Position = gl_ModelViewProjectionMatrix * vec4(position, 1.0);
     texCoord = uv.xy;
     vNormal = normalize(normal);

@@ -30,6 +30,7 @@ Shader mainShader;
 Mesh mesh;
 
 GLuint landmassTexture;
+GLuint checkerTexture;
 LandmassParams params;
 
 GLuint loadTextureFromRes(const char *name,
@@ -108,7 +109,10 @@ bool InitGL() {
     params.rock.texture = loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
     params.snow.texture = loadTextureFromRes("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR);
 
-    return params.water.texture && params.sand.texture && params.grass.texture && params.rock.texture && params.snow.texture;
+    checkerTexture = loadTextureFromRes("checker", img::checker, img::checker_end, GL_NEAREST, GL_NEAREST);
+
+    return params.water.texture && params.sand.texture && params.grass.texture && params.rock.texture && params.snow.texture &&
+           checkerTexture;
 }
 
 void render() {
@@ -183,7 +187,8 @@ void render() {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, textureData.data());
     }
 
-    glBindTexture(GL_TEXTURE_2D, landmassTexture);
+    //glBindTexture(GL_TEXTURE_2D, checkerTexture);
+    glBindTexture(GL_TEXTURE_2D, params.grass.texture);
     mainShader.bind();
     mesh.bind();
 
@@ -204,8 +209,8 @@ void render() {
     mesh.unbind();
 
     // Draw a little gizmo
-    glDisable(GL_DEPTH_TEST);
-    glViewport(0, 0, 50, 50);
+    //glDisable(GL_DEPTH_TEST);
+    //glViewport(0, 0, 50, 50);
     glBegin(GL_LINES);
 
     glColor3f(1, 0, 0);
