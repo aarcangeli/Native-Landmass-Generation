@@ -12,7 +12,8 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Gui.h"
-#include "landmass.h"
+#include "LandmassGenerator.h"
+#include "ChunkData.h"
 #include "math.h"
 #include "res_glsl.h"
 #include "res_img.h"
@@ -23,10 +24,12 @@ SDL_Window *window;
 const int WINDOW_WIDTH = 1280;
 const int WINDOW_HEIGHT = 720;
 bool wireframe = false;
+LandmassGenerator generator;
+ChunkData data;
 Shader mainShader;
 Mesh mesh;
 
-GLuint texture;
+GLuint landmassTexture;
 LandmassParams params;
 
 GLuint loadTextureFromRes(const char *name,
@@ -93,10 +96,10 @@ bool InitGL() {
     glShadeModel(GL_SMOOTH);
 
     // Create a texture
-//    glGenTextures(1, &texture);
-//    glBindTexture(GL_TEXTURE_2D, texture);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glGenTextures(1, &landmassTexture);
+    glBindTexture(GL_TEXTURE_2D, landmassTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // load textures
     params.water.texture = loadTextureFromRes("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR);
@@ -153,34 +156,24 @@ void render() {
     params.refreshRequested = false;
 
     if (refresh) {
-        // generate noise map
-        static float *noiseData = new float[size * size];
-        static PerlinNoise pn;
-        generateNoiseMap(noiseData, pn, size, params);
-
-        // convert noise map to texture
-        float *textureData = new float[size * size * 3];
-        convertNoiseMapToTexture(textureData, noiseData, size, params);
-
-        // apply curve
-        int ii = 0;
-        for (int i = 0; i < size; ++i) {
-            for (int j = 0; j < size; ++j) {
-                float &it = noiseData[ii++];
-                it = (float) pow(10, it);
-                it = it * params.heightMultiplier;
-            }
-        }
-
-        // update mesh
-        updateMesh(mesh, noiseData, size, params);
+        // generate the chunk
+        generator.configure(params);
+        generator.generateChunk(data, size, size, Region{0, 0, params.scale, params.scale});
 
         // update texture
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size, size, 0, GL_RGB, GL_FLOAT, textureData);
+        glBindTexture(GL_TEXTURE_2D, landmassTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, data.textureData.data());
+
+        // generate the mesh
+        bool useFastNormals = params.realtime != 0;
+        data.updateMesh(mesh, useFastNormals);
+
+        // update mesh
+        mesh.bind();
+        mesh.refresh();
     }
 
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, landmassTexture);
     mainShader.bind();
     mesh.bind();
 

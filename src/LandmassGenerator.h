@@ -6,6 +6,7 @@
 #include "PerlinNoise.h"
 #include "Mesh.h"
 #include "vector"
+#include "ChunkData.h"
 
 enum DrawMode {
     DRAW_MODE_NOISE,
@@ -14,6 +15,12 @@ enum DrawMode {
 
 struct TerrainType {
     GLuint texture;
+};
+
+//! It determinate the region of landmass to be generated
+struct Region {
+    float positionX, positionY;
+    float width, height;
 };
 
 struct LandmassParams {
@@ -32,6 +39,32 @@ struct LandmassParams {
     float offsetY = 0;
 
     TerrainType water, sand, grass, rock, snow;
+};
+
+
+class LandmassGenerator {
+public:
+
+    void configure(const LandmassParams &params);
+
+    /*!
+     * Generate a chunk of data
+     *
+     * @param buffer
+     * @param bufferWidth the size of data to generate
+     * @param bufferHeight
+     * @param region the region
+     */
+    void generateChunk(ChunkData &buffer, uint32_t bufferWidth, uint32_t bufferHeight, const Region &region);
+
+private:
+    PerlinNoise pn;
+    LandmassParams params;
+
+    void generateHeightmap(LandmassParams &params, const Region &region, float *heightMap, int width, int height);
+
+    void drawHeightMapTexture(float *heightMap, float *textureData, int width, int height);
+    void drawColorTexture(float *heightMap, float *textureData, int width, int height);
 };
 
 static bool operator==(const TerrainType &a, const TerrainType &b) {
@@ -60,9 +93,5 @@ static bool operator==(const LandmassParams &a, const LandmassParams &b) {
 static bool operator!=(LandmassParams &a, LandmassParams &b) {
     return !(a == b);
 }
-
-void generateNoiseMap(float *noiseData, PerlinNoise &pn, int size, LandmassParams &params);
-void convertNoiseMapToTexture(float *textureData, float *noiseData, int size, LandmassParams &params);
-void updateMesh(Mesh &mesh, const float *noiseData, int size, LandmassParams &params);
 
 #endif //LANDMASSGENERATOR_H
