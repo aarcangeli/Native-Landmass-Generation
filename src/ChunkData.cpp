@@ -16,8 +16,7 @@ void ChunkData::resize(uint32_t _width, uint32_t _height) {
     height = _height;
     vertexCount = width * height;
 
-    heightmap.resize(vertexCount);
-    textureData.resize(vertexCount * 4);
+    heightMap.resize(vertexCount);
 }
 
 uint32_t ChunkData::getWidth() const {
@@ -40,7 +39,7 @@ void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             auto &v = vertices[ii];
-            v.position = {(float) x / width, heightmap[ii], (float) y / height};
+            v.position = {(float) x / width, heightMap[ii], (float) y / height};
             v.textCoord[0] = (float) x / width;
             v.textCoord[1] = (float) y / height;
             ii++;
@@ -83,5 +82,46 @@ void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) {
     } else {
         // slow method
         mesh.calculateNormals();
+    }
+}
+
+void ChunkData::drawHeightMapTexture(vector<float> &textureData) {
+    textureData.resize(vertexCount * 4);
+    float min = *std::min_element(heightMap.begin(), heightMap.end());
+    float max = *std::max_element(heightMap.begin(), heightMap.end());
+
+    unsigned int ii = 0;
+    unsigned int kk = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            float noiseHeight = heightMap[ii++];
+
+            // apply level transform
+            noiseHeight = (noiseHeight + min) / (max - min);
+
+            // calculate noise
+            textureData[kk + 0] = noiseHeight;
+            textureData[kk + 1] = noiseHeight;
+            textureData[kk + 2] = noiseHeight;
+            textureData[kk + 3] = 1;
+            kk += 4;
+        }
+    }
+}
+
+void ChunkData::drawColorTexture(vector<float> &textureData) {
+    textureData.resize(vertexCount * 4);
+
+    unsigned int ii = 0;
+    unsigned int kk = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            float noiseHeight = heightMap[ii++];
+            textureData[kk + 0] = 1;
+            textureData[kk + 1] = 0;
+            textureData[kk + 2] = 0;
+            textureData[kk + 3] = 1;
+            kk += 4;
+        }
     }
 }

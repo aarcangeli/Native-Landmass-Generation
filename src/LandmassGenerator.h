@@ -62,9 +62,6 @@ private:
     LandmassParams params;
 
     void generateHeightmap(LandmassParams &params, const Region &region, float *heightMap, int width, int height);
-
-    void drawHeightMapTexture(float *heightMap, float *textureData, int width, int height);
-    void drawColorTexture(float *heightMap, float *textureData, int width, int height);
 };
 
 static bool operator==(const TerrainType &a, const TerrainType &b) {

@@ -160,10 +160,6 @@ void render() {
         generator.configure(params);
         generator.generateChunk(data, size, size, Region{0, 0, params.scale, params.scale});
 
-        // update texture
-        glBindTexture(GL_TEXTURE_2D, landmassTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, data.textureData.data());
-
         // generate the mesh
         bool useFastNormals = params.realtime != 0;
         data.updateMesh(mesh, useFastNormals);
@@ -171,6 +167,20 @@ void render() {
         // update mesh
         mesh.bind();
         mesh.refresh();
+
+        // update texture
+        glBindTexture(GL_TEXTURE_2D, landmassTexture);
+        vector<float> textureData;
+        switch (params.mode) {
+            case DRAW_MODE_NOISE: {
+                data.drawHeightMapTexture(textureData);
+                break;
+            }
+            case DRAW_MODE_COLOURS:
+                data.drawColorTexture(textureData);
+                break;
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, textureData.data());
     }
 
     glBindTexture(GL_TEXTURE_2D, landmassTexture);

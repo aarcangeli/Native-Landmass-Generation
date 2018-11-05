@@ -26,11 +26,13 @@ public:
      */
     void updateMesh(Mesh &mesh, bool fastNormal);
 
+    void drawHeightMapTexture(std::vector<float> &textureData);
+    void drawColorTexture(std::vector<float> &textureData);
+
     inline uint32_t getWidth() const;
     inline uint32_t getHeight() const;
 
-    std::vector<float> heightmap;
-    std::vector<float> textureData;
+    std::vector<float> heightMap;
 
 private:
     uint32_t width, height;

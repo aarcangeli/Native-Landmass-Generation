@@ -7,16 +7,7 @@ void LandmassGenerator::configure(const LandmassParams &_params) {
 
 void LandmassGenerator::generateChunk(ChunkData &buffer, uint32_t bufferWidth, uint32_t bufferHeight, const Region &region) {
     buffer.resize(bufferWidth, bufferHeight);
-    generateHeightmap(params, region, buffer.heightmap.data(), bufferWidth, bufferHeight);
-
-    switch (params.mode) {
-        case DRAW_MODE_NOISE:
-            drawHeightMapTexture(buffer.heightmap.data(), buffer.textureData.data(), bufferWidth, bufferHeight);
-            break;
-        case DRAW_MODE_COLOURS:
-            drawColorTexture(buffer.heightmap.data(), buffer.textureData.data(), bufferWidth, bufferHeight);
-            break;
-    }
+    generateHeightmap(params, region, buffer.heightMap.data(), bufferWidth, bufferHeight);
 }
 
 void LandmassGenerator::generateHeightmap(LandmassParams &params, const Region &region, float *heightMap, int width, int height) {
@@ -50,45 +41,6 @@ void LandmassGenerator::generateHeightmap(LandmassParams &params, const Region &
 
             // calculate noise
             heightMap[ii++] = noiseHeight;
-        }
-    }
-}
-
-void LandmassGenerator::drawHeightMapTexture(float *heightMap, float *textureData, int width, int height) {
-    int totalSize = width * height;
-    float min = *std::min_element(heightMap, heightMap + totalSize);
-    float max = *std::max_element(heightMap, heightMap + totalSize);
-
-    unsigned int ii = 0;
-    unsigned int kk = 0;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            float noiseHeight = heightMap[ii++];
-
-            // apply level transform
-            noiseHeight = (noiseHeight + min) / (max - min);
-
-            // calculate noise
-            textureData[kk + 0] = noiseHeight;
-            textureData[kk + 1] = noiseHeight;
-            textureData[kk + 2] = noiseHeight;
-            textureData[kk + 3] = 1;
-            kk += 4;
-        }
-    }
-}
-
-void LandmassGenerator::drawColorTexture(float *heightMap, float *textureData, int width, int height) {
-    unsigned int ii = 0;
-    unsigned int kk = 0;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            float noiseHeight = heightMap[ii++];
-            textureData[kk + 0] = 1;
-            textureData[kk + 1] = 0;
-            textureData[kk + 2] = 0;
-            textureData[kk + 3] = 1;
-            kk += 4;
         }
     }
 }
