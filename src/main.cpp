@@ -1,7 +1,6 @@
 #define SDL_MAIN_HANDLED
 
 #include <SDL.h>
-#include <SDL_image.h>
 #include <GL/glew.h>
 #include "use_eigen.h"
 
@@ -13,6 +12,7 @@
 #include "Shader.h"
 #include "Gui.h"
 #include "LandmassGenerator.h"
+#include "ResourceLoader.h"
 #include "ChunkData.h"
 #include "math.h"
 #include "res_glsl.h"
@@ -24,6 +24,7 @@ SDL_Window *window;
 const int WINDOW_WIDTH = 1280;
 const int WINDOW_HEIGHT = 720;
 bool wireframe = false;
+ResourceLoader loader;
 LandmassGenerator generator;
 ChunkData data;
 Shader mainShader;
@@ -33,30 +34,6 @@ GLuint landmassTexture;
 GLuint checkerTexture;
 LandmassParams params;
 
-GLuint loadTextureFromRes(const char *name,
-                          const char *start, const char *end,
-                          GLint minFilter = GL_LINEAR,
-                          GLint magFilter = GL_LINEAR) {
-    GLuint ret;
-    glGenTextures(1, &ret);
-    glBindTexture(GL_TEXTURE_2D, ret);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    SDL_Surface *rawData = IMG_Load_RW(SDL_RWFromMem((void *) start, (int) (end - start)), 1);
-    if (!rawData) {
-        printf("ERROR: Cannot load %s\n", name);
-        return 0;
-    }
-    SDL_Surface *grass = SDL_CreateRGBSurfaceWithFormat(0, rawData->w, rawData->h, 8, SDL_PIXELFORMAT_RGBA32);
-    if (SDL_BlitSurface(rawData, nullptr, grass, nullptr) < 0) {
-        printf("ERROR: Cannot load %s: %s\n", name, SDL_GetError());
-        return 0;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grass->w, grass->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, grass->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-    return ret;
-}
 
 bool InitGL() {
     if (glewInit() != GLEW_OK) {
@@ -103,13 +80,13 @@ bool InitGL() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // load textures
-    params.water.texture = loadTextureFromRes("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR);
-    params.sand.texture = loadTextureFromRes("sandy_grass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR);
-    params.grass.texture = loadTextureFromRes("grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR);
-    params.rock.texture = loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
-    params.snow.texture = loadTextureFromRes("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR);
+    params.water.texture = loader.loadTextureFromRes("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR);
+    params.sand.texture = loader.loadTextureFromRes("sandy_grass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR);
+    params.grass.texture = loader.loadTextureFromRes("grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR);
+    params.rock.texture = loader.loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
+    params.snow.texture = loader.loadTextureFromRes("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR);
 
-    checkerTexture = loadTextureFromRes("checker", img::checker, img::checker_end, GL_NEAREST, GL_NEAREST);
+    checkerTexture = loader.loadTextureFromRes("checker", img::checker, img::checker_end, GL_NEAREST, GL_NEAREST);
 
     return params.water.texture && params.sand.texture && params.grass.texture && params.rock.texture && params.snow.texture &&
            checkerTexture;
@@ -232,10 +209,7 @@ int main() {
     CameraHandler camera;
 
     SDL_Init(SDL_INIT_VIDEO);
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        cout << "Cannot load SDL_image: " << IMG_GetError() << endl;
-        return 1;
-    }
+    if (!loader.init()) return 1;
 
     window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
