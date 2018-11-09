@@ -26,14 +26,27 @@ const int WINDOW_HEIGHT = 720;
 bool wireframe = false;
 ResourceLoader loader;
 LandmassGenerator generator;
-ChunkData data;
+ChunkData chunk;
 Shader mainShader;
 Mesh mesh;
 
-GLuint landmassTexture;
-GLuint checkerTexture;
+Texture checkerTexture;
 LandmassParams params;
 
+void resetDefaultParams();
+
+void GLAPIENTRY
+MessageCallback(GLenum source,
+                GLenum type,
+                GLuint id,
+                GLenum severity,
+                GLsizei length,
+                const GLchar *message,
+                const void *userParam) {
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+}
 
 bool InitGL() {
     if (glewInit() != GLEW_OK) {
@@ -42,7 +55,7 @@ bool InitGL() {
     }
 
     if (!mainShader.compile(glsl::standard_vs, glsl::standard_fs)) {
-        printf("ERROR: Cannot compile phong shader\n");
+        printf("ERROR: Cannot compile standard shader\n");
         return false;
     }
 
@@ -73,23 +86,21 @@ bool InitGL() {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glShadeModel(GL_SMOOTH);
 
-    // Create a texture
-    glGenTextures(1, &landmassTexture);
-    glBindTexture(GL_TEXTURE_2D, landmassTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
     // load textures
-    params.water.texture = loader.loadTextureFromRes("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR);
-    params.sand.texture = loader.loadTextureFromRes("sandy_grass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR);
-    params.grass.texture = loader.loadTextureFromRes("grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR);
-    params.rock.texture = loader.loadTextureFromRes("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR);
-    params.snow.texture = loader.loadTextureFromRes("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR);
+    params.texturePalette.push_back(loader.loadTexture(params, "water", img::water, img::water_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture(params, "sandyGrass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture(params, "grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture(params, "rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture(params, "snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR));
 
-    checkerTexture = loader.loadTextureFromRes("checker", img::checker, img::checker_end, GL_NEAREST, GL_NEAREST);
+    checkerTexture = loader.loadTexture(params, "checker", img::checker, img::checker_end, GL_NEAREST, GL_NEAREST);
 
-    return params.water.texture && params.sand.texture && params.grass.texture && params.rock.texture && params.snow.texture &&
-           checkerTexture;
+    // During init, enable debug output
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
+
+    return true;
 }
 
 void render() {
@@ -139,35 +150,38 @@ void render() {
     if (refresh) {
         // generate the chunk
         generator.configure(params);
-        generator.generateChunk(data, size, size, Region{0, 0, params.scale, params.scale});
+        generator.generateChunk(chunk, size, size, Region{0, 0, params.scale, params.scale});
 
         // generate the mesh
         bool useFastNormals = params.realtime != 0;
-        data.updateMesh(mesh, useFastNormals);
+        chunk.updateMesh(mesh, useFastNormals);
 
         // update mesh
         mesh.bind();
         mesh.refresh();
 
         // update texture
-        glBindTexture(GL_TEXTURE_2D, landmassTexture);
         vector<float> textureData;
         switch (params.mode) {
             case DRAW_MODE_NOISE: {
-                data.drawHeightMapTexture(textureData);
+                chunk.drawHeightMapTexture(textureData);
                 break;
             }
             case DRAW_MODE_COLOURS:
-                data.drawColorTexture(textureData);
+                chunk.drawColorTexture(textureData);
                 break;
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, textureData.data());
+        //glBindTexture(GL_TEXTURE_2D, landmassTexture);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, textureData.data());
     }
 
-    //glBindTexture(GL_TEXTURE_2D, checkerTexture);
-    glBindTexture(GL_TEXTURE_2D, params.grass.texture);
     mainShader.bind();
+    //mainShader.fillUniforms(params);
     mesh.bind();
+
+    // update render settings
+    //glUniform1fv(minHeightLocation, 1, (float *) &renderSettings);
+    float array[] = {0, 0, 1, 1, 0, 0, 1, 1};
 
     // Draw a cube
     glPushMatrix();
@@ -226,6 +240,8 @@ int main() {
     Gui gui{window};
     gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    resetDefaultParams();
+
     while (true) {
         SDL_Event event;
 
@@ -266,4 +282,15 @@ int main() {
         SDL_GL_SwapWindow(window);
     }
 
+}
+
+void resetDefaultParams() {
+    params.layers.resize(0);
+    params.layers.push_back(TerrainType{0, Color{1, 0, 0}, 0, 0, 0.5, 1});
+    params.layers.push_back(TerrainType{1, Color{1, 0, 0}, 0.01, 0, 0.5, 1});
+    params.layers.push_back(TerrainType{2, Color{1, 0, 0}, 0.02, 0, 0.5, 1});
+
+    for (auto &it : params.layers) {
+        it.directGlTexture = params.texturePalette[it.textureNumber].myTex;
+    }
 }

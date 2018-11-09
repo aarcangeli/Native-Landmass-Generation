@@ -2,15 +2,18 @@
 #define RESOURCELOADER_H
 
 #include <GL/glew.h>
+#include "LandmassGenerator.h"
 
 class ResourceLoader {
 public:
     bool init();
 
-    GLuint loadTextureFromRes(const char *name,
-                              const char *start, const char *end,
-                              GLint minFilter = GL_LINEAR,
-                              GLint magFilter = GL_LINEAR);
+    Texture loadTexture(LandmassParams &params,
+                        const char *name,
+                        const char *start, const char *end,
+                        GLint minFilter = GL_LINEAR,
+                        GLint magFilter = GL_LINEAR);
+
 };
 
 

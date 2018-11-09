@@ -1,8 +1,10 @@
 #include "Shader.h"
 #include "stdio.h"
 #include "iostream"
+#include <algorithm>
 
 #include <GL/glew.h>
+#include "LandmassGenerator.h"
 
 bool Shader::compileVertexShader(const char *source) {
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -73,14 +75,60 @@ void Shader::bind() {
 
 void Shader::unbind() {
     glUseProgram(0);
+    for (int i = 0; i < MAX_LAYERS; ++i) {
+        glActiveTexture(static_cast<GLenum>(GL_TEXTURE0 + i));
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 GLint Shader::getAttribLocation(const char *name) {
     return glGetAttribLocation(program, name);
 }
 
+GLint Shader::getUniformLocation(const char *name) {
+    return glGetUniformLocation(program, name);
+}
+
 bool Shader::compile(const char *vertexShaderSource, const char *fragmentShaderSource) {
     if (!compileVertexShader(vertexShaderSource)) return false;
     if (!compileFragmentShader(fragmentShaderSource)) return false;
-    return linkShader();
+    if (!linkShader()) return false;
+    layerTextLocation = getUniformLocation("layerText");
+    heightRangeLocation = getUniformLocation("heightRange");
+    layerCountLocation = getUniformLocation("layerCount");
+    layerColorListLocation = getUniformLocation("layerColorList");
+    layerPackListLocation = getUniformLocation("layerPackList");
+    return true;
+}
+
+void Shader::fillUniforms(const LandmassParams &params) {
+    int layerText[MAX_LAYERS];
+    float layerColorList[MAX_LAYERS * 3];
+    float layerPackList[MAX_LAYERS * 4];
+
+    uint32_t layerCount = std::min((uint32_t) params.layers.size(), MAX_LAYERS);
+
+    for (int i = 0, ii = 0, jj = 0; i < layerCount; ++i) {
+        const TerrainType &terrain = params.layers[i];
+        layerColorList[ii++] = terrain.colour.red;
+        layerColorList[ii++] = terrain.colour.green;
+        layerColorList[ii++] = terrain.colour.blue;
+
+        layerPackList[jj++] = terrain.startHeight;
+        layerPackList[jj++] = terrain.blend;
+        layerPackList[jj++] = terrain.colourStrength;
+        layerPackList[jj++] = terrain.textureScale;
+
+        layerText[i] = i;
+
+        glActiveTexture(static_cast<GLenum>(GL_TEXTURE0 + i));
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(terrain.directGlTexture));
+    }
+
+    glUniform1i(layerCountLocation, layerCount);
+    glUniform2f(heightRangeLocation, 0.0, 1.0);
+    glUniform3fv(layerColorListLocation, layerCount, layerColorList);
+    glUniform4fv(layerPackListLocation, layerCount, layerPackList);
+    //glUniform1i(layerTextLocation, 2);
+    glUniform1iv(layerTextLocation, layerCount, layerText);
 }

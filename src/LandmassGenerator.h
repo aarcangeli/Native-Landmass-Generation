@@ -8,13 +8,35 @@
 #include "vector"
 #include "ChunkData.h"
 
+// hardcoded in standard_fs.glsl
+const uint32_t MAX_LAYERS = 8;
+
 enum DrawMode {
     DRAW_MODE_NOISE,
     DRAW_MODE_COLOURS,
 };
 
+struct Color {
+    float red, green, blue;
+};
+
+struct Texture {
+    uint32_t width, height;
+    std::vector<uint8_t> textureData;
+    int myTex;
+};
+
 struct TerrainType {
-    GLuint texture;
+    int textureNumber;
+    Color colour;
+    float startHeight;
+    float blend;
+    float colourStrength;
+    float textureScale;
+    int directGlTexture = -1; // fast getter
+
+    TerrainType() = default;
+    TerrainType(int textureNumber, const Color &colour, float startHeight, float blend, float colourStrength, float textureScale);
 };
 
 //! It determinate the region of landmass to be generated
@@ -38,7 +60,8 @@ struct LandmassParams {
     float offsetX = 0;
     float offsetY = 0;
 
-    TerrainType water, sand, grass, rock, snow;
+    std::vector<Texture> texturePalette;
+    std::vector<TerrainType> layers;
 };
 
 
@@ -64,9 +87,21 @@ private:
     void generateHeightmap(LandmassParams &params, const Region &region, float *heightMap, int width, int height);
 };
 
+static bool operator==(const Color &a, const Color &b) {
+    return
+            a.red == b.red &&
+            a.green == b.green &&
+            a.blue == b.blue;
+}
+
 static bool operator==(const TerrainType &a, const TerrainType &b) {
     return
-            a.texture == b.texture;
+            a.textureNumber == b.textureNumber &&
+            a.colour == b.colour &&
+            a.startHeight == b.startHeight &&
+            a.blend == b.blend &&
+            a.colourStrength == b.colourStrength &&
+            a.textureScale == b.textureScale;
 }
 
 static bool operator==(const LandmassParams &a, const LandmassParams &b) {
@@ -80,11 +115,8 @@ static bool operator==(const LandmassParams &a, const LandmassParams &b) {
             a.persistence == b.persistence &&
             a.lacunarity == b.lacunarity &&
             a.offsetX == b.offsetX &&
-            a.water == b.water &&
-            a.sand == b.sand &&
-            a.grass == b.grass &&
-            a.rock == b.rock &&
-            a.snow == b.snow;
+            a.offsetY == b.offsetY &&
+            a.layers == b.layers;
 }
 
 static bool operator!=(LandmassParams &a, LandmassParams &b) {

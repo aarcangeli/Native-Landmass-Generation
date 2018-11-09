@@ -1,6 +1,16 @@
 #version 120
 
-uniform sampler2D mytex;
+#define MAX_LAYERS 8
+
+uniform int layerCount;
+
+uniform sampler2D layerText[MAX_LAYERS];
+// packed red, green, blue
+uniform vec4 layerColorList[MAX_LAYERS];
+// packed startHeight, blend, colourStrength, textureScale
+uniform vec4 layerPackList[MAX_LAYERS];
+// packed minHeight, maxHeight
+uniform vec2 heightRange;
 
 varying vec3 positionViewSpace;
 varying vec3 normalViewSpace;
@@ -9,6 +19,21 @@ varying vec3 vNormal;
 varying vec3 positionCameraSpace;
 varying vec3 normalCameraSpace;
 varying vec3 normalDiff;
+
+float saturate(float num) {
+    return clamp(num, 0.0, 1.0);
+}
+float inverseLerp(float a, float b, float value) {
+    return saturate((value - a)/(1E-4 + b - a));
+}
+
+vec4 triplanar(sampler2D texture, vec3 coord, vec3 normal) {
+    vec3 blendAxes = abs(normalize(normal));
+    vec4 texColorX = texture2D(texture, coord.yz) * blendAxes.x;
+    vec4 texColorY = texture2D(texture, coord.xz) * blendAxes.y;
+    vec4 texColorZ = texture2D(texture, coord.xy) * blendAxes.z;
+    return texColorX + texColorY + texColorZ;
+}
 
 void main() {
     // ambient lightning
@@ -20,16 +45,26 @@ void main() {
 
     float totalStrength = ambientStrength + diffuseStrength / 2.0;
 
-    // triplanar mapping
-    // it has been used a view space coordinates insted of the classical normal space coordinates for simplicity
-    vec3 scaledWorldPos = positionViewSpace;
-    vec3 blendAxes = abs(normalize(normalViewSpace));
-    vec4 texColorX = texture2D(mytex, scaledWorldPos.yz) * blendAxes.x;
-    vec4 texColorY = texture2D(mytex, scaledWorldPos.xz) * blendAxes.y;
-    vec4 texColorZ = texture2D(mytex, scaledWorldPos.xy) * blendAxes.z;
-    vec4 texColor = texColorX + texColorY + texColorZ;
+    vec4 texColor = vec4(0.0);
+
+    float minHeight = heightRange.x;
+    float maxHeight = heightRange.y;
+    float heightPercent = inverseLerp(minHeight, maxHeight, positionViewSpace.y);
+
+
+    for (int i = 0; i < layerCount; i ++) {
+        float baseStartHeights = layerPackList[i].x;
+        float baseBlends = layerPackList[i].y;
+        float colourStrength = layerPackList[i].z;
+        float textureScale = layerPackList[i].w;
+        float drawStrength = inverseLerp(-baseBlends / 2, baseBlends / 2, heightPercent - baseStartHeights);
+
+        vec4 textureColour = triplanar(layerText[i], positionViewSpace * textureScale, normalViewSpace);
+        texColor = texColor * (1 - drawStrength) + textureColour * drawStrength;
+    }
 
     gl_FragColor = vec4(texColor.xyz * clamp(totalStrength, 0.0, 1.0), 1.0);
+    //gl_FragColor = texture2D(layerText[1], positionViewSpace.xy);
 
     //gl_FragColor = vec4(diffuseStrength, diffuseStrength, diffuseStrength, 1.0);
     //gl_FragColor = vec4(vNormal, 1.0);
