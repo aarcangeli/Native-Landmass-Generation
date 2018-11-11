@@ -18,10 +18,15 @@
 #include "nuklear.h"
 #include "nuklear_sdl_gl2.h"
 
+struct GuiPrivate {
+    std::vector<struct nk_image> textures;
+};
+
 Gui::Gui(SDL_Window *window) {
     ctx = nk_sdl_init(window);
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
+    data = new GuiPrivate;
 }
 
 void Gui::inputBegin() {
@@ -81,10 +86,15 @@ void Gui::resize(int _width, int _height) {
     height = _height;
 }
 
-void Gui::editor(const char *string, LandmassParams &params) {
+bool sortTerrainByHeight(TerrainType &a, TerrainType &b) {
+    return a.height < b.height;
+}
+
+void Gui::editor(LandmassParams &params) {
     if (isFirstEditor) {
         defaultValues = params;
         lastValues = params;
+        loadPalette(params);
     }
 
     int windowWidth = SIDEBAR_WIDTH;
@@ -95,9 +105,6 @@ void Gui::editor(const char *string, LandmassParams &params) {
         nk_layout_row_dynamic(ctx, 30, 1);
         nk_label(ctx, "View:", NK_TEXT_LEFT);
         nk_radio_label(ctx, "Real Time", &params.realtime);
-        nk_label(ctx, "Mode:", NK_TEXT_LEFT);
-        if (nk_option_label(ctx, "Noise Map", params.mode == DRAW_MODE_NOISE)) params.mode = DRAW_MODE_NOISE;
-        if (nk_option_label(ctx, "Colour Map", params.mode == DRAW_MODE_COLOURS)) params.mode = DRAW_MODE_COLOURS;
         nk_property_float(ctx, "Scale:", 0.01, &params.scale, 100, 0.01, 0.01);
         nk_property_float(ctx, "Height:", 0.01, &params.heightMultiplier, 10, 0.01, 0.01);
 
@@ -120,7 +127,94 @@ void Gui::editor(const char *string, LandmassParams &params) {
         if (!params.realtime) {
             if (nk_button_label(ctx, "Generate")) params.refreshRequested = 1;
         }
+
+        nk_label(ctx, "Layers:", NK_TEXT_LEFT);
+        int size = (int) params.layers.size();
+        nk_property_int(ctx, "Count:", 1, &size, 20, 1, 1);
+        params.layers.resize((unsigned) size);
+        if (editingLayer >= size) {
+            editingLayer = -1;
+        }
+        for (int i = 0; i < size; ++i) {
+            if (i < size - 1 && params.layers[i].height > params.layers[i + 1].height) {
+                TerrainType temp = params.layers[i];
+                params.layers[i] = params.layers[i + 1];
+                params.layers[i + 1] = temp;
+                if (editingLayer == i) editingLayer++;
+                else if (editingLayer == i + 1) editingLayer--;
+            }
+            TerrainType &layer = params.layers[i];
+            std::string name = layer.name + "(" + std::to_string(layer.height) + ")";
+            if (nk_button_label(ctx, name.c_str())) editingLayer = i;
+        }
     }
     nk_end(ctx);
+
+    if (editingLayer >= 0) {
+        terrainEditor(params, params.layers[editingLayer]);
+    }
+
     isFirstEditor = false;
+}
+
+void Gui::terrainEditor(LandmassParams &params, TerrainType &type) {
+    std::vector<struct nk_image> &textures = data->textures;
+    struct nk_rect bounds = nk_rect(50, 50, 400, 500);
+
+    if (nk_begin(ctx, "Layer", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
+        nk_layout_row_dynamic(ctx, 0, 1);
+
+        // name
+        char name[512];
+        strcpy(name, type.name.c_str());
+        nk_edit_string_zero_terminated(ctx, NK_EDIT_SIMPLE, name, sizeof(name), nk_filter_ascii);
+        type.name = name;
+
+        // texture
+        int width = SIDEBAR_WIDTH / 2;
+        nk_layout_row_static(ctx, width, width, 3);
+        nk_label(ctx, "Texture:", NK_TEXT_LEFT);
+        if (nk_button_image(ctx, textures[type.textureNumber])) {
+            imagePopupActive = !imagePopupActive;
+        }
+
+        if (imagePopupActive) {
+            if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, "Image Popup", 0, nk_rect(265, 0, 275, 220))) {
+                nk_layout_row_static(ctx, 80, 80, 3);
+                int i = 0;
+                for (auto &it : textures) {
+                    if (nk_button_image(ctx, it)) {
+                        type.textureNumber = i;
+                        type.directGlTexture = params.texturePalette[i].myTex;
+                        imagePopupActive = false;
+                        nk_popup_close(ctx);
+                    }
+                    i++;
+                }
+                nk_popup_end(ctx);
+            }
+        }
+
+        // height
+        nk_layout_row_dynamic(ctx, 0, 1);
+        nk_spacing(ctx, 1);
+        nk_property_float(ctx, "#Height:", 0, &type.height, 1, 0.01, 0.01);
+        nk_property_float(ctx, "#Blend:", 0, &type.blend, 1, 0.01, 0.01);
+        nk_property_float(ctx, "#Texture scale:", 0, &type.textureScale, 1, 0.01, 0.01);
+
+        nk_layout_row_dynamic(ctx, 0, 1);
+        nk_spacing(ctx, 1);
+        if (nk_button_label(ctx, "Close")) editingLayer = -1;
+    }
+    nk_end(ctx);
+}
+
+void Gui::loadPalette(const LandmassParams &params) {
+    std::vector<struct nk_image> &textures = data->textures;
+    textures.resize(params.texturePalette.size());
+    int i = 0;
+    for (auto &it : params.texturePalette) {
+        textures[i] = nk_image_id(it.myTex);
+        i++;
+    }
 }

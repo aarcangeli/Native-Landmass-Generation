@@ -1,8 +1,12 @@
 #include "LandmassGenerator.h"
 #include "algorithm"
 
-TerrainType::TerrainType(int textureNumber, const Color &colour, float startHeight, float blend, float colourStrength, float textureScale)
-        : textureNumber(textureNumber), colour(colour), startHeight(startHeight), blend(blend), colourStrength(colourStrength),
+TerrainType::TerrainType(const std::string &name,
+                         int textureNumber,
+                         float height,
+                         float blend,
+                         float textureScale)
+        : name(name), textureNumber(textureNumber), height(height), blend(blend),
           textureScale(textureScale) {}
 
 void LandmassGenerator::configure(const LandmassParams &_params) {

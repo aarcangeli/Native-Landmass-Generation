@@ -23,7 +23,6 @@ private:
     GLint heightRangeLocation;
     GLint layerTextLocation;
     GLint layerCountLocation;
-    GLint layerColorListLocation;
     GLint layerPackListLocation;
 
     bool checkCompilationStatus(const char *type, unsigned int shader);

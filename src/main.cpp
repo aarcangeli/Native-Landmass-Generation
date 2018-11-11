@@ -159,24 +159,10 @@ void render() {
         // update mesh
         mesh.bind();
         mesh.refresh();
-
-        // update texture
-        vector<float> textureData;
-        switch (params.mode) {
-            case DRAW_MODE_NOISE: {
-                chunk.drawHeightMapTexture(textureData);
-                break;
-            }
-            case DRAW_MODE_COLOURS:
-                chunk.drawColorTexture(textureData);
-                break;
-        }
-        //glBindTexture(GL_TEXTURE_2D, landmassTexture);
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_FLOAT, textureData.data());
     }
 
     mainShader.bind();
-    //mainShader.fillUniforms(params);
+    mainShader.fillUniforms(params);
     mesh.bind();
 
     // update render settings
@@ -274,9 +260,10 @@ int main() {
 
         render();
 
-        gui.editor("Parameters", params);
+        gui.editor(params);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glActiveTexture(GL_TEXTURE0);
         gui.render();
 
         SDL_GL_SwapWindow(window);
@@ -286,9 +273,11 @@ int main() {
 
 void resetDefaultParams() {
     params.layers.resize(0);
-    params.layers.push_back(TerrainType{0, Color{1, 0, 0}, 0, 0, 0.5, 1});
-    params.layers.push_back(TerrainType{1, Color{1, 0, 0}, 0.01, 0, 0.5, 1});
-    params.layers.push_back(TerrainType{2, Color{1, 0, 0}, 0.02, 0, 0.5, 1});
+    params.layers.push_back(TerrainType{"Water", 0, 0.05, 0.02, 1});
+    params.layers.push_back(TerrainType{"Sand", 1, 0.08, 0.02, 1});
+    params.layers.push_back(TerrainType{"Grass", 2, 0.14, 0.02, 1});
+    params.layers.push_back(TerrainType{"Rocks", 3, 0.25, 0.02, 1});
+    params.layers.push_back(TerrainType{"Snow", 4, 100, 0.02, 10});
 
     for (auto &it : params.layers) {
         it.directGlTexture = params.texturePalette[it.textureNumber].myTex;
