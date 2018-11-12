@@ -6,7 +6,7 @@
 
 class ResourceLoader {
 public:
-    bool init();
+    void init();
 
     Texture loadTexture(LandmassParams &params,
                         const char *name,

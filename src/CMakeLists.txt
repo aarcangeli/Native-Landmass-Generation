@@ -6,6 +6,7 @@ include(glew)
 include(eigen)
 
 include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${SDL2_INCLUDE_DIR}
         ${SDL2_IMAGE_INCLUDE_DIR}
         ${NUKLEAR_INCLUDE_DIR}

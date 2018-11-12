@@ -2,7 +2,7 @@
 #define CAMERAHANDLER_H
 
 #include <SDL2/SDL.h>
-#include "use_eigen.h"
+#include "utils/use-eigen.h"
 
 class CameraHandler {
     using Quat = Eigen::Quaterniond;
@@ -22,7 +22,7 @@ public:
     /**
      * Apply internal state to view matrix
      */
-    void applyViewMatrix();
+    double *getViewMatrix();
 
 private:
     const double DEG_PER_PIXEL = 0.2;

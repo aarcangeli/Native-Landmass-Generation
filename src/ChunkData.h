@@ -24,7 +24,7 @@ public:
      * @param mesh
      * @param fastNormal
      */
-    void updateMesh(Mesh &mesh, bool fastNormal);
+    void updateMesh(Mesh &mesh, bool fastNormal) const;
 
     void drawHeightMapTexture(std::vector<float> &textureData);
     void drawColorTexture(std::vector<float> &textureData);

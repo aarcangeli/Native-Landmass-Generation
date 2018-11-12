@@ -4,12 +4,11 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-bool ResourceLoader::init() {
+void ResourceLoader::init() {
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         printf("Cannot load SDL_image: %s\n", IMG_GetError());
-        return false;
+        throw;
     }
-    return true;
 }
 
 Texture ResourceLoader::loadTexture(LandmassParams &params, const char *name, const char *start, const char *end, GLint minFilter,

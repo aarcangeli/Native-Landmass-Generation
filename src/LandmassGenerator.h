@@ -3,7 +3,7 @@
 
 #include "vector"
 #include "string"
-#include "PerlinNoise.h"
+#include "utils/PerlinNoise.h"
 #include "Mesh.h"
 #include "vector"
 #include "ChunkData.h"
@@ -36,6 +36,7 @@ struct Region {
 };
 
 struct LandmassParams {
+    bool wireframe = false;
     int realtime = 0;
     int refreshRequested = 1;
 

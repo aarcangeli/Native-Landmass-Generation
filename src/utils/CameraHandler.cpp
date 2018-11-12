@@ -100,11 +100,9 @@ void CameraHandler::setRelativeMouseMode() const {
     }
 }
 
-void CameraHandler::applyViewMatrix() {
+double * CameraHandler::getViewMatrix() {
     tick();
-
-    double *pDouble = transform.data();
-    glMultMatrixd(pDouble);
+    return transform.data();
 }
 
 void CameraHandler::tick() {

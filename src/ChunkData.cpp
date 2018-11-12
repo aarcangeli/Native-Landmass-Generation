@@ -27,7 +27,7 @@ uint32_t ChunkData::getHeight() const {
     return height;
 }
 
-void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) {
+void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) const {
     // each vertex has a face apart the last row and the last column
     uint32_t numberOfFaces = vertexCount - width - height + 1;
 

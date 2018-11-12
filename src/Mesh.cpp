@@ -1,10 +1,9 @@
 #include <cassert>
 #include "Mesh.h"
 
-bool Mesh::init() {
+void Mesh::init() {
     glGenBuffers(1, &arrayBufferObject);
     glGenBuffers(1, &elementArrayBufferObject);
-    return true;
 }
 
 void Mesh::refresh() {
@@ -68,9 +67,6 @@ void Mesh::resize(uint32_t numberOfVertices, uint32_t numberOfFaces) {
 void Mesh::draw() {
     GLsizei size = (GLsizei) (faces.size() * 4);
     glDrawElements(GL_QUADS, size, GL_UNSIGNED_INT, 0);
-    int t = sizeof(Eigen::Vector3f);
-    int m = sizeof(Vertex);
-    int s = 0;
 }
 
 void Mesh::calculateNormals() {

@@ -3,7 +3,7 @@
 
 #include "vector"
 #include "GL/glew.h"
-#include "use_eigen.h"
+#include "utils/use-eigen.h"
 
 /**
  * General purpose mesh buffer
@@ -35,7 +35,7 @@ public:
         uint32_t index;
     };
 
-    bool init();
+    void init();
     void setPositionAttribute(GLint attribute);
     void setNormalAttribute(GLint attribute);
     void setTexCoordAttribute(GLint attribute);
