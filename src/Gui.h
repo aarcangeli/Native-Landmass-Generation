@@ -9,6 +9,8 @@ struct nk_context;
 struct nk_font_atlas;
 
 const int SIDEBAR_WIDTH = 250;
+const int TOPBAR_HEIGHT = 47;
+const int STATUSBAR_HEIGHT = 22;
 
 struct GuiPrivate;
 

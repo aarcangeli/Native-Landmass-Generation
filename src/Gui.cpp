@@ -20,6 +20,7 @@
 
 struct GuiPrivate {
     std::vector<struct nk_image> textures;
+    nk_style_button style;
 };
 
 Gui::Gui(SDL_Window *window) {
@@ -27,6 +28,14 @@ Gui::Gui(SDL_Window *window) {
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
     data = new GuiPrivate;
+
+    ctx->style.window.border = 2;
+
+    nk_style_button &style = data->style;
+    style = ctx->style.button;
+    style.normal.data.color = {80, 80, 80, 255};
+    style.hover.data.color = {90, 90, 90, 255};
+    style.border_color = {80, 80, 80, 255};
 }
 
 void Gui::inputBegin() {
@@ -154,12 +163,34 @@ void Gui::editor(LandmassParams &params) {
         terrainEditor(params, params.layers[editingLayer]);
     }
 
+    const char *toolTip = "";
+    struct nk_style_window old = ctx->style.window;
+    ctx->style.window.padding = {10, 12};
+    ctx->style.window.spacing = {8, 10};
+    if (nk_begin(ctx, "Buttons", nk_rect(0, 0, width - SIDEBAR_WIDTH, TOPBAR_HEIGHT), NK_WINDOW_NO_SCROLLBAR)) {
+        nk_layout_row_static(ctx, TOPBAR_HEIGHT - 24, 33, 10);
+        if (nk_widget_is_hovered(ctx)) toolTip = "Wireframe (W)";
+        if (nk_button_label_styled(ctx, &data->style, "W")) params.wireframe = !params.wireframe;
+//        if (nk_widget_is_hovered(ctx)) toolTip = "Select (S)";
+//        nk_button_label_styled(ctx, &data->style, "B2");
+//        if (nk_widget_is_hovered(ctx)) toolTip = "Help (F1)";
+//        nk_button_label_styled(ctx, &data->style, "?");
+    }
+    ctx->style.window = old;
+    nk_end(ctx);
+
+    if (nk_begin(ctx, "Status", nk_rect(0, height - STATUSBAR_HEIGHT, width - SIDEBAR_WIDTH, STATUSBAR_HEIGHT), NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_NO_INPUT)) {
+        nk_layout_row_dynamic(ctx, 20, 1);
+        nk_label(ctx, toolTip, NK_TEXT_LEFT);
+    }
+    nk_end(ctx);
+
     isFirstEditor = false;
 }
 
 void Gui::terrainEditor(LandmassParams &params, TerrainType &type) {
     std::vector<struct nk_image> &textures = data->textures;
-    struct nk_rect bounds = nk_rect(50, 50, 400, 500);
+    struct nk_rect bounds = nk_rect(0, TOPBAR_HEIGHT, 400, 500);
 
     if (nk_begin(ctx, "Layer", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
         nk_layout_row_dynamic(ctx, 0, 1);

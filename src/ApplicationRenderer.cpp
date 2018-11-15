@@ -46,8 +46,19 @@ void ApplicationRenderer::render(const LandmassParams &params) {
 
     // Setup OpenGL
     glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, width - SIDEBAR_WIDTH, height);
+    int canvasWidth = width - SIDEBAR_WIDTH;
+    int canvasHeight = height - TOPBAR_HEIGHT - STATUSBAR_HEIGHT;
+    glViewport(0, STATUSBAR_HEIGHT, canvasWidth, canvasHeight);
     glPolygonMode(GL_FRONT_AND_BACK, params.wireframe ? GL_LINE : GL_FILL);
+
+    // Setup projection camera matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float ratio = (float) canvasWidth / canvasHeight;
+    gluPerspective(45, ratio, 0.05, 1000);
+    //glOrtho(-ratio, ratio, -1, 1, 0, 100);
+
+    glMatrixMode(GL_MODELVIEW);
 
     mainShader.bind();
     mainShader.fillUniforms(params);
@@ -67,11 +78,17 @@ void ApplicationRenderer::render(const LandmassParams &params) {
     mainShader.unbind();
     mesh.unbind();
 
+    glPushAttrib(GL_ENABLE_BIT);
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_BLEND);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     grid.bind();
     unliteShader.bind();
     grid.draw();
     grid.unbind();
     unliteShader.unbind();
+    glPopAttrib();
 }
 
 void ApplicationRenderer::resize(int _width, int _height) {

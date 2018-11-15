@@ -98,11 +98,6 @@ void Application::initGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    // Setup projection camera matrix
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (float) (WINDOW_WIDTH - SIDEBAR_WIDTH) / WINDOW_HEIGHT, 0.05, 1000);
-
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glShadeModel(GL_SMOOTH);
 
