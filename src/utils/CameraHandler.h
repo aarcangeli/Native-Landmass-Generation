@@ -29,7 +29,7 @@ private:
     const double STEP_MOVE = 0.003;
     const double STEP_ROT = DEG_PER_PIXEL * M_PI / 180;
     const double STEP_PAN = 0.003;
-    const int DISTANCE_BASE = 5;
+    const int DISTANCE_BASE = 3;
 
     enum State {
         STATE_MOUSE_LEFT,

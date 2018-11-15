@@ -25,9 +25,6 @@ int Application::runLoop() {
         return 1;
     }
 
-    SDL_GL_CreateContext(window);
-    SDL_GL_SetSwapInterval(1);
-
     initGL();
     Gui gui{window};
     gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -60,9 +57,9 @@ int Application::runLoop() {
 
         // setup camera
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-
         glMultMatrixd(camera.getViewMatrix());
 
         updateState();
@@ -80,16 +77,18 @@ int Application::runLoop() {
 }
 
 void Application::initGL() {
-    if (glewInit() != GLEW_OK) {
-        printf("ERROR: Cannot inizialize glew\n");
-        throw;
-    }
-
+    SDL_GL_CreateContext(window);
+    SDL_GL_SetSwapInterval(1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+    if (glewInit() != GLEW_OK) {
+        printf("ERROR: Cannot inizialize glew\n");
+        throw;
+    }
 
     // Setup buffers
     glClearColor(0.3, 0.3, 0.3, 1);
@@ -115,7 +114,6 @@ void Application::initGL() {
     params.texturePalette.push_back(loader.loadTexture(params, "snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR));
 
     // During init, enable debug output
-    glEnable(GL_DEBUG_OUTPUT);
     installGlLogger();
 
     renderer.init();

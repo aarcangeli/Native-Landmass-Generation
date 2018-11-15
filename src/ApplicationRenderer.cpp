@@ -6,12 +6,15 @@
 #include "res_glsl.h"
 #include "Gui.h"
 
-ApplicationRenderer::ApplicationRenderer() {
-}
+ApplicationRenderer::ApplicationRenderer() = default;
 
 void ApplicationRenderer::init() {
     if (!mainShader.compile(glsl::standard_vs, glsl::standard_fs)) {
         printf("ERROR: Cannot compile standard shader\n");
+        throw;
+    }
+    if (!unliteShader.compile(glsl::unlite_vs, glsl::unlite_fs)) {
+        printf("ERROR: Cannot compile unlite shader\n");
         throw;
     }
 
@@ -19,6 +22,14 @@ void ApplicationRenderer::init() {
     mesh.setPositionAttribute(mainShader.getAttribLocation("position"));
     mesh.setNormalAttribute(mainShader.getAttribLocation("normal"));
     mesh.setTexCoordAttribute(mainShader.getAttribLocation("uv"));
+
+    grid.init();
+    grid.generateAxes(5);
+    grid.generateGrid(11, 11, 10, {.4f, .4f, .4f});
+    grid.bind();
+    grid.refresh();
+    grid.setPositionAttribute(unliteShader.getAttribLocation("position"));
+    grid.setColorAttribute(unliteShader.getAttribLocation("color"));
 }
 
 void ApplicationRenderer::updateMesh(const LandmassParams &params, const ChunkData &chunk) {
@@ -31,7 +42,7 @@ void ApplicationRenderer::updateMesh(const LandmassParams &params, const ChunkDa
 }
 
 void ApplicationRenderer::render(const LandmassParams &params) {
-    const double meshSize = 3;
+    const double meshSize = 2;
 
     // Setup OpenGL
     glEnable(GL_DEPTH_TEST);
@@ -56,24 +67,11 @@ void ApplicationRenderer::render(const LandmassParams &params) {
     mainShader.unbind();
     mesh.unbind();
 
-    // Draw a little gizmo
-    //glDisable(GL_DEPTH_TEST);
-    //glViewport(0, 0, 50, 50);
-    glBegin(GL_LINES);
-
-    glColor3f(1, 0, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(2, 0, 0);
-
-    glColor3f(0, 1, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 2, 0);
-
-    glColor3f(0, 0, 1);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 2);
-
-    glEnd();
+    grid.bind();
+    unliteShader.bind();
+    grid.draw();
+    grid.unbind();
+    unliteShader.unbind();
 }
 
 void ApplicationRenderer::resize(int _width, int _height) {

@@ -18,5 +18,6 @@ void GLAPIENTRY MessageCallback(GLenum source,
 }
 
 void installGlLogger() {
+    glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(MessageCallback, 0);
 }

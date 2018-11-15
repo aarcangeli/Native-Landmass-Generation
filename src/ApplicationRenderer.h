@@ -3,6 +3,7 @@
 
 #include "Shader.h"
 #include "Mesh.h"
+#include "Grid.h"
 
 class ApplicationRenderer {
 public:
@@ -14,7 +15,8 @@ public:
     void render(const LandmassParams &params);
 
 private:
-    Shader mainShader;
+    Grid grid;
+    Shader mainShader, unliteShader;
     Mesh mesh;
     int width, height;
 
