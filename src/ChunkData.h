@@ -32,11 +32,12 @@ public:
     inline uint32_t getWidth() const;
     inline uint32_t getHeight() const;
 
-    std::vector<float> heightMap;
+    std::vector<float> &getHeightMap() { return heightMap; };
 
 private:
     uint32_t width, height;
     uint32_t vertexCount;
+    std::vector<float> heightMap;
 };
 
 #endif //CHUNKDATA_H

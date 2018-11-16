@@ -11,10 +11,18 @@
 // hardcoded in standard_fs.glsl
 const uint32_t MAX_LAYERS = 8;
 
+struct Pixel {
+    uint8_t r, g, b, a;
+};
+
 struct Texture {
     uint32_t width, height;
-    std::vector<uint8_t> textureData;
+    std::vector<Pixel> textureData;
     int myTex;
+
+    Pixel &get(int x, int y) {
+        return textureData[y * width + x];
+    }
 };
 
 struct TerrainType {

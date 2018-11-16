@@ -166,7 +166,24 @@ void Application::updateState() {
     if (refresh) {
         // generate the chunk
         generator.configure(params);
-        generator.generateChunk(chunk, MESH_SIZE, MESH_SIZE, Region{0, 0, params.scale, params.scale});
+        //generator.generateChunk(chunk, MESH_SIZE, MESH_SIZE, Region{0, 0, params.scale, params.scale});
+
+//        const int dim = 500;
+//        Texture &texture = params.heightmap;
+//        chunk.resize(dim, dim);
+//        vector<float> &heightMap = chunk.getHeightMap();
+//        int i = 0;
+//        for (int y = 0; y < dim; ++y) {
+//            for (int x = 0; x < dim; ++x) {
+//                float px = (float) x / dim;
+//                float py = (float) y / dim;
+//
+//                int tx = (int) floor(px * texture.width);
+//                int ty = (int) floor(py * texture.height);
+//                auto pixel = texture.get(tx, ty);
+//                heightMap[i++] = pixel.r / 255.f * 0.3f;
+//            }
+//        }
 
         // generate the mesh
         renderer.updateMesh(params, chunk);

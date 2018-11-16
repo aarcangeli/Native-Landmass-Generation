@@ -32,9 +32,9 @@ Texture ResourceLoader::loadTexture(LandmassParams &params, const char *name, co
     Texture result{};
     result.width = static_cast<uint32_t>(rawData->w);
     result.height = static_cast<uint32_t>(rawData->h);
-    result.textureData.resize(result.width * result.height * 3);
+    result.textureData.resize(result.width * result.height);
     result.myTex = tex;
-    memcpy(result.textureData.data(), converted->pixels, result.textureData.size());
+    memcpy(result.textureData.data(), converted->pixels, result.width * result.height * 4);
     SDL_FreeSurface(converted);
     return result;
 }
