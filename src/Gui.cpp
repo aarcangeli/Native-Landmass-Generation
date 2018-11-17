@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include "Application.h"
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -23,7 +24,9 @@ struct GuiPrivate {
     nk_style_button style;
 };
 
-Gui::Gui(SDL_Window *window) {
+void Gui::init(Application *_app, SDL_Window *window) {
+    app = _app;
+
     ctx = nk_sdl_init(window);
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
@@ -170,7 +173,7 @@ void Gui::editor(LandmassParams &params) {
     if (nk_begin(ctx, "Buttons", nk_rect(0, 0, width - SIDEBAR_WIDTH, TOPBAR_HEIGHT), NK_WINDOW_NO_SCROLLBAR)) {
         nk_layout_row_static(ctx, TOPBAR_HEIGHT - 24, 33, 10);
         if (nk_widget_is_hovered(ctx)) toolTip = "Wireframe (W)";
-        if (nk_button_label_styled(ctx, &data->style, "W")) params.wireframe = !params.wireframe;
+        if (nk_button_label_styled(ctx, &data->style, "W")) app->wireframe = !app->wireframe;
 //        if (nk_widget_is_hovered(ctx)) toolTip = "Select (S)";
 //        nk_button_label_styled(ctx, &data->style, "B2");
 //        if (nk_widget_is_hovered(ctx)) toolTip = "Help (F1)";
@@ -179,7 +182,8 @@ void Gui::editor(LandmassParams &params) {
     ctx->style.window = old;
     nk_end(ctx);
 
-    if (nk_begin(ctx, "Status", nk_rect(0, height - STATUSBAR_HEIGHT, width - SIDEBAR_WIDTH, STATUSBAR_HEIGHT), NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_NO_INPUT)) {
+    if (nk_begin(ctx, "Status", nk_rect(0, height - STATUSBAR_HEIGHT, width - SIDEBAR_WIDTH, STATUSBAR_HEIGHT),
+                 NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_NO_INPUT)) {
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_label(ctx, toolTip, NK_TEXT_LEFT);
     }

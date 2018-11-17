@@ -1,4 +1,4 @@
-#version 120
+#version 330
 
 #define MAX_LAYERS 8
 
@@ -64,6 +64,5 @@ void main() {
 
     //gl_FragColor = vec4(diffuseStrength, diffuseStrength, diffuseStrength, 1.0);
     //gl_FragColor = vec4(vNormal, 1.0);
-    //gl_FragColor = vec4(viewPosition, 1.0);
     //gl_FragColor = vec4(normalize(normalViewSpace), 1.0);
 }

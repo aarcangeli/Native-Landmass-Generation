@@ -1,6 +1,4 @@
-#version 120
-
-#define MAX_LAYERS 8
+#version 330
 
 varying vec3 vColor;
 

@@ -6,9 +6,9 @@
 
 class CameraHandler {
     using Quat = Eigen::Quaterniond;
-    using Vec3 = Eigen::Vector3d;
-    using Transform = Eigen::Affine3d;
-    using AngleAxisd = Eigen::AngleAxisd;
+    using Vec3 = Eigen::Vector3f;
+    using Transform = Eigen::Affine3f;
+    using AngleAxisd = Eigen::AngleAxisf;
 
 public:
     CameraHandler();
@@ -20,9 +20,14 @@ public:
     bool handleEvent(SDL_Event &event);
 
     /**
+     * Called from Application to update internal state
+     */
+    void tick();
+
+    /**
      * Apply internal state to view matrix
      */
-    double *getViewMatrix();
+    const float *getViewMatrix() const;
 
 private:
     const double DEG_PER_PIXEL = 0.2;
@@ -64,7 +69,6 @@ private:
     double zoom = 0;
     double distance = DISTANCE_BASE;
 
-    void tick();
     void setRelativeMouseMode() const;
     inline bool shouldPreventWasd() const;
 };

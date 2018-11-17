@@ -4,6 +4,7 @@ include(nuklear)
 include(ResourceCompiler)
 include(glew)
 include(eigen)
+include(glm)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -12,6 +13,7 @@ include_directories(
         ${NUKLEAR_INCLUDE_DIR}
         ${GLEW_INCLUDE_DIR}
         ${EIGEN_INCLUDE_DIR}
+        ${GLM_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE SOURCES *.cpp)
@@ -32,3 +34,9 @@ glew_install_runtimes(NLG)
 sdl2_image_install_runtimes(NLG)
 
 install(TARGETS NLG RUNTIME DESTINATION ${OUTPUT_DIRECTORY})
+
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
+if ("${BUILD_TYPE}" STREQUAL "RELEASE" OR "${BUILD_TYPE}" STREQUAL "RELWITHDEBINFO" OR "${BUILD_TYPE}" STREQUAL "MINSIZEREL")
+    message(STATUS "Release build")
+    add_definitions(-DNLG_RELEASE)
+endif ()

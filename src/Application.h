@@ -1,6 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "config.h"
 #include <SDL.h>
 #include <GL/glew.h>
 
@@ -18,7 +19,17 @@ public:
 
     int runLoop();
 
+    bool wireframe = false;
+
+    ResourceLoader *getLoader();
+
+    const float *getViewMatrix() const {
+        // TODO: make return glm::mat4
+        return camera.getViewMatrix();
+    }
+
 private:
+    Gui gui;
     CameraHandler camera;
     SDL_Window *window;
     ResourceLoader loader;
@@ -32,6 +43,7 @@ private:
     void updateState();
 
     int lastUpdate = 0;
+    int lastDigest = 0;
     int lastFps = 0;
     int count = 0;
 

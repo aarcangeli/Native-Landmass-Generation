@@ -100,8 +100,7 @@ void CameraHandler::setRelativeMouseMode() const {
     }
 }
 
-double * CameraHandler::getViewMatrix() {
-    tick();
+const float *CameraHandler::getViewMatrix() const {
     return transform.data();
 }
 

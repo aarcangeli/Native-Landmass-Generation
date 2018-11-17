@@ -44,7 +44,6 @@ struct Region {
 };
 
 struct LandmassParams {
-    bool wireframe = false;
     int realtime = 0;
     int refreshRequested = 1;
 

@@ -1,6 +1,8 @@
 #ifndef GUI_H
 #define GUI_H
 
+class Application;
+
 #include <SDL2/SDL.h>
 #include <vector>
 #include "LandmassGenerator.h"
@@ -15,6 +17,7 @@ const int STATUSBAR_HEIGHT = 22;
 struct GuiPrivate;
 
 class Gui {
+    Application *app;
     bool isFirstEditor = true;
     nk_context *ctx;
     nk_font_atlas *atlas;
@@ -28,7 +31,7 @@ class Gui {
     bool imagePopupActive = false;
 
 public:
-    Gui(SDL_Window *window);
+    void init(Application *app, SDL_Window *window);
 
     // wrappers of nk_*
     void inputBegin();

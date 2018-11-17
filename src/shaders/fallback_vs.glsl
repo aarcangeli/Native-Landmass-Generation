@@ -9,9 +9,6 @@ uniform mat4 projMat;
 uniform mat4 viewMat;
 uniform mat4 modelMat;
 
-varying vec3 vColor;
-
 void main() {
-    vColor = color;
     gl_Position = projMat * viewMat * modelMat * vec4(position, 1.0);
 }

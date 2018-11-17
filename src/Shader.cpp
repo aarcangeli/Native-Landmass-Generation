@@ -2,83 +2,67 @@
 #include "stdio.h"
 #include "iostream"
 #include <algorithm>
+#include <Application.h>
 
 #include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 #include "LandmassGenerator.h"
 
-bool Shader::compileVertexShader(const char *source) {
+void Shader::init() {
+    if (isInitialized) return;
+    program = glCreateProgram();
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    if (!program || !vertexShader || !fragmentShader) {
+        printf("Cannot create shader\n");
+        throw;
+    }
+}
+
+bool Shader::compileVertexShader(const char *source) {
     glShaderSource(vertexShader, 1, &source, nullptr);
     glCompileShader(vertexShader);
-
     return checkCompilationStatus("vertex shader", vertexShader);
 }
 
 bool Shader::compileFragmentShader(const char *source) {
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &source, nullptr);
     glCompileShader(fragmentShader);
-
     return checkCompilationStatus("fragment shader", fragmentShader);
 }
 
 bool Shader::linkShader() {
-    program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
     glLinkProgram(program);
 
-    GLint log_length, success;
+    GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success) return false;
 
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
-        if (log_length > 0) {
-            GLchar *log = (GLchar *) malloc(log_length);
-            glGetProgramInfoLog(program, log_length, nullptr, log);
-            printf("shader link log: %s\n", log);
-            free(log);
-        }
-
-        printf("shader link error");
-        exit(EXIT_FAILURE);
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    modelMatIdx = glGetUniformLocation(program, "modelMat");
+    viewMatIdx = glGetUniformLocation(program, "viewMat");
+    projMatIdx = glGetUniformLocation(program, "projMat");
 
     return true;
 }
 
 bool Shader::checkCompilationStatus(const char *type, GLuint shader) {
-    GLint log_length, success;
+    GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        printf("ERROR: Cannot compile %s:\n", type);
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-        if (log_length > 0) {
-            GLchar *log = (GLchar *) malloc(log_length);
-            glGetShaderInfoLog(shader, log_length, nullptr, log);
-            printf("%s\n", log);
-            free(log);
-        }
-        return false;
-    }
-
-    return true;
+    return success != 0;
 }
 
-void Shader::bind() {
+void Shader::bind(const glm::mat4 &modelMat, const glm::mat4 &viewMat, const glm::mat4 &projMat) {
     glUseProgram(program);
+
+    glUniformMatrix4fv(modelMatIdx, 1, GL_FALSE, glm::value_ptr(modelMat));
+    glUniformMatrix4fv(viewMatIdx, 1, GL_FALSE, glm::value_ptr(viewMat));
+    glUniformMatrix4fv(projMatIdx, 1, GL_FALSE, glm::value_ptr(projMat));
 }
 
 void Shader::unbind() {
     glUseProgram(0);
-}
-
-GLint Shader::getAttribLocation(const char *name) {
-    return glGetAttribLocation(program, name);
 }
 
 GLint Shader::getUniformLocation(const char *name) {
@@ -86,6 +70,7 @@ GLint Shader::getUniformLocation(const char *name) {
 }
 
 bool Shader::compile(const char *vertexShaderSource, const char *fragmentShaderSource) {
+    init();
     if (!compileVertexShader(vertexShaderSource)) return false;
     if (!compileFragmentShader(fragmentShaderSource)) return false;
     if (!linkShader()) return false;

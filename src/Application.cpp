@@ -26,7 +26,7 @@ int Application::runLoop() {
     }
 
     initGL();
-    Gui gui{window};
+    gui.init(this, window);
     gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
     renderer.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -48,19 +48,17 @@ int Application::runLoop() {
             if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
                     case SDLK_w:
-                        params.wireframe = !params.wireframe;
+                        wireframe = !wireframe;
                         continue;
                 }
             }
         }
         gui.inputEnd();
 
+        camera.tick();
+
         // setup camera
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glMultMatrixd(camera.getViewMatrix());
 
         updateState();
 
@@ -102,16 +100,16 @@ void Application::initGL() {
     glShadeModel(GL_SMOOTH);
 
     // load textures
-    params.texturePalette.push_back(loader.loadTexture(params, "water", img::water, img::water_end, GL_LINEAR, GL_LINEAR));
-    params.texturePalette.push_back(loader.loadTexture(params, "sandyGrass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR));
-    params.texturePalette.push_back(loader.loadTexture(params, "grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR));
-    params.texturePalette.push_back(loader.loadTexture(params, "rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR));
-    params.texturePalette.push_back(loader.loadTexture(params, "snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture("water", img::water, img::water_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture("sandyGrass", img::sandy_grass, img::sandy_grass_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture("grass", img::grass, img::grass_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture("rocks1", img::rocks1, img::rocks1_end, GL_LINEAR, GL_LINEAR));
+    params.texturePalette.push_back(loader.loadTexture("snow", img::snow, img::snow_end, GL_LINEAR, GL_LINEAR));
 
     // During init, enable debug output
     installGlLogger();
 
-    renderer.init();
+    renderer.init(this);
 }
 
 void Application::resetDefaultParams() {
@@ -130,7 +128,6 @@ void Application::resetDefaultParams() {
 void Application::updateState() {
     // Update timer
     int now = SDL_GetTicks();
-    static int lastUpdate = now;
     if (!lastUpdate) lastUpdate = now;
     int delta = now - lastUpdate;
     lastUpdate = now;
@@ -144,6 +141,11 @@ void Application::updateState() {
         SDL_SetWindowTitle(window, title.c_str());
         lastFps = now;
         count = 0;
+    }
+
+    if (now - lastDigest > 1000) {
+        loader.digest();
+        lastDigest = now;
     }
 
     // refresh z param
@@ -166,7 +168,7 @@ void Application::updateState() {
     if (refresh) {
         // generate the chunk
         generator.configure(params);
-        //generator.generateChunk(chunk, MESH_SIZE, MESH_SIZE, Region{0, 0, params.scale, params.scale});
+        generator.generateChunk(chunk, MESH_SIZE, MESH_SIZE, Region{0, 0, params.scale, params.scale});
 
 //        const int dim = 500;
 //        Texture &texture = params.heightmap;
@@ -188,4 +190,8 @@ void Application::updateState() {
         // generate the mesh
         renderer.updateMesh(params, chunk);
     }
+}
+
+ResourceLoader *Application::getLoader() {
+    return &loader;
 }
