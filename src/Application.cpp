@@ -18,7 +18,7 @@ int Application::runLoop() {
     loader.init();
 
     window = SDL_CreateWindow("Native Landmass Generation", SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+                              SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     if (!window) {
         printf("Could not create window: %s\n", SDL_GetError());
@@ -29,6 +29,7 @@ int Application::runLoop() {
     gui.init(this, window);
     gui.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
     renderer.resize(WINDOW_WIDTH, WINDOW_HEIGHT);
+    chunk.resize(MESH_SIZE, MESH_SIZE);
 
     resetDefaultParams();
 
@@ -40,6 +41,14 @@ int Application::runLoop() {
             if (event.type == SDL_QUIT) {
                 SDL_Quit();
                 return 0;
+            }
+            if (event.type == SDL_WINDOWEVENT) {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    int width = event.window.data1;
+                    int height = event.window.data2;
+                    gui.resize(width, height);
+                    renderer.resize(width, height);
+                }
             }
 
             if (gui.inputhandleEvent(event)) continue;
@@ -168,24 +177,7 @@ void Application::updateState() {
     if (refresh) {
         // generate the chunk
         generator.configure(params);
-        generator.generateChunk(chunk, MESH_SIZE, MESH_SIZE, Region{0, 0, params.scale, params.scale});
-
-//        const int dim = 500;
-//        Texture &texture = params.heightmap;
-//        chunk.resize(dim, dim);
-//        vector<float> &heightMap = chunk.getHeightMap();
-//        int i = 0;
-//        for (int y = 0; y < dim; ++y) {
-//            for (int x = 0; x < dim; ++x) {
-//                float px = (float) x / dim;
-//                float py = (float) y / dim;
-//
-//                int tx = (int) floor(px * texture.width);
-//                int ty = (int) floor(py * texture.height);
-//                auto pixel = texture.get(tx, ty);
-//                heightMap[i++] = pixel.r / 255.f * 0.3f;
-//            }
-//        }
+        generator.generateChunk(chunk, Region{0, 0, params.scale, params.scale});
 
         // generate the mesh
         renderer.updateMesh(params, chunk);

@@ -19,14 +19,6 @@ void ChunkData::resize(uint32_t _width, uint32_t _height) {
     heightMap.resize(vertexCount);
 }
 
-uint32_t ChunkData::getWidth() const {
-    return width;
-}
-
-uint32_t ChunkData::getHeight() const {
-    return height;
-}
-
 void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) const {
     // each vertex has a face apart the last row and the last column
     uint32_t numberOfFaces = vertexCount - width - height + 1;
@@ -80,7 +72,7 @@ void ChunkData::updateMesh(Mesh &mesh, bool fastNormal) const {
             }
         }
     } else {
-        // slow method
+        // slow normal calculation
         mesh.calculateNormals();
     }
 }
@@ -103,23 +95,6 @@ void ChunkData::drawHeightMapTexture(vector<float> &textureData) {
             textureData[kk + 0] = noiseHeight;
             textureData[kk + 1] = noiseHeight;
             textureData[kk + 2] = noiseHeight;
-            textureData[kk + 3] = 1;
-            kk += 4;
-        }
-    }
-}
-
-void ChunkData::drawColorTexture(vector<float> &textureData) {
-    textureData.resize(vertexCount * 4);
-
-    unsigned int ii = 0;
-    unsigned int kk = 0;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            float noiseHeight = heightMap[ii++];
-            textureData[kk + 0] = 1;
-            textureData[kk + 1] = 0;
-            textureData[kk + 2] = 0;
             textureData[kk + 3] = 1;
             kk += 4;
         }

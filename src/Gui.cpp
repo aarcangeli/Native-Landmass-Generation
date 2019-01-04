@@ -113,7 +113,7 @@ void Gui::editor(LandmassParams &params) {
     int windowHeight = height;
     struct nk_rect bounds = nk_rect(width - windowWidth, 0, windowWidth, windowHeight);
 
-    if (nk_begin(ctx, "Noise", bounds, NK_WINDOW_BORDER | NK_WINDOW_MOVABLE)) {
+    if (nk_begin(ctx, "Noise", bounds, NK_WINDOW_BORDER)) {
         nk_layout_row_dynamic(ctx, 30, 1);
         nk_label(ctx, "View:", NK_TEXT_LEFT);
         nk_radio_label(ctx, "Real Time", &params.realtime);
@@ -142,7 +142,7 @@ void Gui::editor(LandmassParams &params) {
 
         nk_label(ctx, "Layers:", NK_TEXT_LEFT);
         int size = (int) params.layers.size();
-        nk_property_int(ctx, "Count:", 1, &size, 20, 1, 1);
+        nk_property_int(ctx, "Count:", 0, &size, MAX_LAYERS, 1, 1);
         params.layers.resize((unsigned) size);
         if (editingLayer >= size) {
             editingLayer = -1;
@@ -233,7 +233,7 @@ void Gui::terrainEditor(LandmassParams &params, TerrainType &type) {
         // height
         nk_layout_row_dynamic(ctx, 0, 1);
         nk_spacing(ctx, 1);
-        nk_property_float(ctx, "#Height:", 0, &type.height, 1, 0.01, 0.01);
+        nk_property_float(ctx, "#Height:", 0, &type.height, 100, 0.01, 0.01);
         nk_property_float(ctx, "#Blend:", 0, &type.blend, 1, 0.01, 0.01);
         nk_property_float(ctx, "#Texture scale:", 0, &type.textureScale, 1, 0.01, 0.01);
 

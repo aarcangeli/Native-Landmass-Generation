@@ -11,7 +11,8 @@ public:
     void init();
 
     Texture loadTexture(const char *name,
-                        const char *start, const char *end,
+                        const char *start,
+                        const char *end,
                         GLint minFilter = GL_LINEAR,
                         GLint magFilter = GL_LINEAR);
 

@@ -5,7 +5,6 @@
 #include "GL/glew.h"
 #include "utils/use-eigen.h"
 
-
 struct Vertex {
     Eigen::Vector3f position;
     Eigen::Vector3f normal;
@@ -31,17 +30,15 @@ struct Face {
 };
 
 /**
- * General purpose mesh buffer
- * Each vertex has the following structure:
- *   - float[3] position
- *   - float[3] normal
- *   - float[2] uv coordinates
- *
- * In this implementation every face has 4 vertices
+ * Generic mesh buffer
+ * Template parameter 'FACE' must have the following fields:
+ *   - static const int VERTICES_PER_FACE = 4;
+ *     Number of vertices per each face
+ *   - static const int MODE = GL_QUADS;
+ *     Rendering mode
  */
 template<class FACE>
 class AbstractBuffer {
-
 public:
 
     void init();
@@ -60,7 +57,7 @@ public:
     void draw();
 
 protected:
-    GLuint arrayBufferObject, elementArrayBufferObject;
+    GLuint arrayBufferObject = 0, elementArrayBufferObject = 0;
     GLint positionAttribute = -1, normalAttribute = -1, texCoordAttribute = -1, colorAttribute = -1;
 };
 

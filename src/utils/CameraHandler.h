@@ -5,10 +5,9 @@
 #include "utils/use-eigen.h"
 
 class CameraHandler {
-    using Quat = Eigen::Quaterniond;
     using Vec3 = Eigen::Vector3f;
     using Transform = Eigen::Affine3f;
-    using AngleAxisd = Eigen::AngleAxisf;
+    using AngleAxis = Eigen::AngleAxisf;
 
 public:
     CameraHandler();
@@ -30,10 +29,10 @@ public:
     const float *getViewMatrix() const;
 
 private:
-    const double DEG_PER_PIXEL = 0.2;
-    const double STEP_MOVE = 0.003;
-    const double STEP_ROT = DEG_PER_PIXEL * M_PI / 180;
-    const double STEP_PAN = 0.003;
+    const float DEG_PER_PIXEL = 0.2;
+    const float STEP_MOVE = 0.003;
+    const float STEP_ROT = float(DEG_PER_PIXEL * M_PI / 180);
+    const float STEP_PAN = 0.003;
     const int DISTANCE_BASE = 3;
 
     enum State {
@@ -67,10 +66,11 @@ private:
 
     // zooming
     double zoom = 0;
-    double distance = DISTANCE_BASE;
+    float distance = DISTANCE_BASE;
 
     void setRelativeMouseMode() const;
     inline bool shouldPreventWasd() const;
+    inline void updateDistance();
 };
 
 #endif //CAMERAHANDLER_H

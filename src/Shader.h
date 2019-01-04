@@ -1,5 +1,5 @@
-#ifndef NPCG_SHADER_H
-#define NPCG_SHADER_H
+#ifndef NLG_SHADER_H
+#define NLG_SHADER_H
 
 class Application;
 
@@ -47,4 +47,4 @@ private:
     bool linkShader();
 };
 
-#endif //NPCG_SHADER_H
+#endif //NLG_SHADER_H

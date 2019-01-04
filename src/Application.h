@@ -4,6 +4,9 @@
 #include "config.h"
 #include <SDL.h>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "ResourceLoader.h"
 #include "ApplicationRenderer.h"
@@ -19,13 +22,11 @@ public:
 
     int runLoop();
 
+    ResourceLoader *getLoader();
     bool wireframe = false;
 
-    ResourceLoader *getLoader();
-
-    const float *getViewMatrix() const {
-        // TODO: make return glm::mat4
-        return camera.getViewMatrix();
+    const glm::mat4 getViewMatrix() const {
+        return glm::make_mat4(camera.getViewMatrix());
     }
 
 private:

@@ -7,10 +7,10 @@
 using namespace std;
 
 CameraHandler::CameraHandler() {
-    transform = AngleAxisd(0, Vec3(1, 0, 0));
+    transform = AngleAxis(0, Vec3(1, 0, 0));
     transform.translate(Vec3(0, 0, -distance));
-    transform.rotate(AngleAxisd(45 * M_PI / 180, Vec3(1, 0, 0)));
-    transform.rotate(AngleAxisd(45 * M_PI / 180, Vec3(0, 1, 0)));
+    transform.rotate(AngleAxis(float(45 * M_PI / 180), Vec3(1, 0, 0)));
+    transform.rotate(AngleAxis(float(45 * M_PI / 180), Vec3(0, 1, 0)));
 }
 
 bool CameraHandler::handleEvent(SDL_Event &event) {
@@ -28,6 +28,8 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
                 state[STATE_MOUSE_RIGHT] = event.button.state;
                 setRelativeMouseMode();
                 return true;
+            default:
+                break;
         }
     }
     if (event.type == SDL_MOUSEMOTION) {
@@ -38,7 +40,7 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
         if (event.wheel.y) {
             transform.pretranslate(Vec3(0, 0, distance));
             zoom -= event.wheel.y;
-            distance = pow(1.2, zoom) * DISTANCE_BASE;
+            updateDistance();
             transform.pretranslate(Vec3(0, 0, -distance));
             return true;
         }
@@ -82,6 +84,8 @@ bool CameraHandler::handleEvent(SDL_Event &event) {
             case SDLK_f:
                 action = ACTION_FOCUS;
                 return true;
+            default:
+                break;
         }
     }
 
@@ -126,20 +130,20 @@ void CameraHandler::tick() {
             } else if (state[STATE_MOUSE_LEFT]) {
                 transform.pretranslate(Vec3(0, 0, distance));
                 auto top = transform.rotation() * Vec3(0, 1, 0);
-                transform.prerotate(AngleAxisd(deltaX * STEP_ROT, top));
-                transform.prerotate(AngleAxisd(deltaY * STEP_ROT, Vec3(1, 0, 0)));
+                transform.prerotate(AngleAxis(deltaX * STEP_ROT, top));
+                transform.prerotate(AngleAxis(deltaY * STEP_ROT, Vec3(1, 0, 0)));
                 transform.pretranslate(Vec3(0, 0, -distance));
             } else if (state[STATE_MOUSE_RIGHT]) {
                 transform.pretranslate(Vec3(0, 0, distance));
                 zoom -= deltaX / 100.;
-                distance = pow(1.2, zoom) * DISTANCE_BASE;
+                updateDistance();
                 transform.pretranslate(Vec3(0, 0, -distance));
             }
         }
 
     } else {
         if (state[STATE_MOUSE_RIGHT]) {
-            double step = delta;
+            float step = delta;
             if (state[STATE_KEY_CTRL]) step /= 3;
             if (state[STATE_KEY_SHIFT]) step *= 3;
             if (state[STATE_KEY_W]) transform.pretranslate(Vec3(0, 0, step * STEP_MOVE));
@@ -150,8 +154,8 @@ void CameraHandler::tick() {
             if (state[STATE_KEY_E]) transform.pretranslate(Vec3(0, -step * STEP_MOVE, 0));
             if (deltaX || deltaY) {
                 auto top = transform.rotation() * Vec3(0, 1, 0);
-                transform.prerotate(AngleAxisd(deltaX * STEP_ROT, top));
-                transform.prerotate(AngleAxisd(deltaY * STEP_ROT, Vec3(1, 0, 0)));
+                transform.prerotate(AngleAxis(deltaX * STEP_ROT, top));
+                transform.prerotate(AngleAxis(deltaY * STEP_ROT, Vec3(1, 0, 0)));
             }
         }
     }
@@ -169,4 +173,8 @@ void CameraHandler::tick() {
     }
 
     deltaX = deltaY = 0;
+}
+
+void CameraHandler::updateDistance() {
+    distance = float(pow(1.2, zoom) * DISTANCE_BASE);
 }

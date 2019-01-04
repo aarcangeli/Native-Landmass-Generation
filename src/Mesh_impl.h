@@ -1,13 +1,14 @@
+#include "config.h"
+
 template<class FACE>
 void AbstractBuffer<FACE>::init() {
-    glGenBuffers(1, &arrayBufferObject);
-    glGenBuffers(1, &elementArrayBufferObject);
+    if (!arrayBufferObject) glGenBuffers(1, &arrayBufferObject);
+    if (!elementArrayBufferObject) glGenBuffers(1, &elementArrayBufferObject);
 }
-
 
 template<class FACE>
 void AbstractBuffer<FACE>::refresh() {
-#ifndef NDEBUG
+#if !NLG_RELEASE
     // check that the buffer are currently binded
     GLint value;
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &value);
@@ -25,7 +26,7 @@ template<class FACE>
 void AbstractBuffer<FACE>::bind() {
     glBindBuffer(GL_ARRAY_BUFFER, arrayBufferObject);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementArrayBufferObject);
-    // build semantic
+    // build semantics
     if (positionAttribute >= 0) {
         glVertexAttribPointer((GLuint) positionAttribute, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) (4 * 0));
         glEnableVertexAttribArray((GLuint) positionAttribute);
@@ -82,6 +83,6 @@ void AbstractBuffer<FACE>::resize(uint32_t numberOfVertices, uint32_t numberOfFa
 
 template<class FACE>
 void AbstractBuffer<FACE>::draw() {
-    GLsizei size = (GLsizei) (faces.size() * FACE::VERTICES_PER_FACE);
+    GLsizei size = faces.size() * FACE::VERTICES_PER_FACE;
     glDrawElements(FACE::MODE, size, GL_UNSIGNED_INT, 0);
 }

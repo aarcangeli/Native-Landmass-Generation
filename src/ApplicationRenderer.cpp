@@ -48,8 +48,8 @@ void ApplicationRenderer::updateMesh(const LandmassParams &params, const ChunkDa
 }
 
 void ApplicationRenderer::render(const LandmassParams &params) {
-    const double meshSize = 2;
-    glm::mat4 viewMat = glm::make_mat4(app->getViewMatrix());
+    const float meshSize = 2;
+    glm::mat4 viewMat = app->getViewMatrix();
 
     // Setup OpenGL
     glEnable(GL_DEPTH_TEST);

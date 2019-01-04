@@ -27,10 +27,10 @@ struct Texture {
 
 struct TerrainType {
     std::string name;
-    int textureNumber;
-    float height;
-    float blend;
-    float textureScale;
+    int textureNumber = -1;
+    float height = 1;
+    float blend = 0;
+    float textureScale = 0;
     int directGlTexture = -1; // fast getter
 
     TerrainType() = default;
@@ -70,12 +70,10 @@ public:
     /*!
      * Generate a chunk of data
      *
-     * @param buffer
-     * @param bufferWidth the size of data to generate
-     * @param bufferHeight
+     * @param destination a pre-allocated chunk
      * @param region the region
      */
-    void generateChunk(ChunkData &buffer, uint32_t bufferWidth, uint32_t bufferHeight, const Region &region);
+    void generateChunk(ChunkData &destination, const Region &region);
 
 private:
     PerlinNoise pn;

@@ -73,7 +73,7 @@ std::shared_ptr<Shader> ResourceLoader::loadFromFileSystem(const char *name, boo
     replace(path.begin(), path.end(), '\\', '/');
     int64_t index = path.find_last_of('/');
     if (index < 0) return nullptr;
-    path = path.substr(0, index) + "/shaders/" + name;
+    path = path.substr(0, (uint64_t) index) + "/shaders/" + name;
 
     std::shared_ptr<Shader> result{new Shader};
     ShaderFile shaderFile = {
@@ -165,6 +165,8 @@ void ResourceLoader::digest() {
 
 void ResourceLoader::compileFallbackShader(std::shared_ptr<Shader> &result) const {
     if (!result->compile(glsl::fallback_vs, glsl::fallback_fs)) {
-        printf("FATAL_ERROR: Cannot compile shader 'blank'\n");
+        printf("FATAL_ERROR: Cannot compile fallback shader\n");
+        // The fallback shader must always be compilable, otherwise we have a serious problem with device
+        exit(1);
     }
 }

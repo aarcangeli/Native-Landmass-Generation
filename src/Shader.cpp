@@ -48,9 +48,22 @@ bool Shader::linkShader() {
 }
 
 bool Shader::checkCompilationStatus(const char *type, GLuint shader) {
-    GLint success;
+    GLint log_length, success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    return success != 0;
+
+    if (!success) {
+        printf("ERROR: Cannot compile %s:\n", type);
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+        if (log_length > 0) {
+            GLchar *log = (GLchar *) malloc(log_length);
+            glGetShaderInfoLog(shader, log_length, nullptr, log);
+            printf("%s\n", log);
+            free(log);
+        }
+        return false;
+    }
+
+    return true;
 }
 
 void Shader::bind(const glm::mat4 &modelMat, const glm::mat4 &viewMat, const glm::mat4 &projMat) {

@@ -13,9 +13,10 @@ void LandmassGenerator::configure(const LandmassParams &_params) {
     params = _params;
 }
 
-void LandmassGenerator::generateChunk(ChunkData &buffer, uint32_t bufferWidth, uint32_t bufferHeight, const Region &region) {
-    buffer.resize(bufferWidth, bufferHeight);
-    generateHeightmap(params, region, buffer.getHeightMap().data(), bufferWidth, bufferHeight);
+void LandmassGenerator::generateChunk(ChunkData &destination, const Region &region) {
+    uint32_t bufferWidth = destination.getWidth();
+    uint32_t bufferHeight = destination.getHeight();
+    generateHeightmap(params, region, destination.getHeightMap().data(), bufferWidth, bufferHeight);
 }
 
 void LandmassGenerator::generateHeightmap(LandmassParams &params, const Region &region, float *heightMap, int width, int height) {
@@ -47,7 +48,6 @@ void LandmassGenerator::generateHeightmap(LandmassParams &params, const Region &
             noiseHeight = (float) pow(10, noiseHeight);
             noiseHeight = noiseHeight * params.heightMultiplier;
 
-            // calculate noise
             heightMap[ii++] = noiseHeight;
         }
     }

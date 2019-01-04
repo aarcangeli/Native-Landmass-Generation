@@ -14,7 +14,7 @@ if (MINGW)
         set(postfix i686-w64-mingw32)
     endif ()
 
-    set(SDL2_INCLUDE_DIR ${SDL2_BINARY_HOME}/${postfix}/include/SDL2)
+    set(SDL2_INCLUDE_DIR ${SDL2_BINARY_HOME}/${postfix}/include/SDL2 ${SDL2_BINARY_HOME}/${postfix}/include)
     set(SDL2_LIBRARY ${SDL2_BINARY_HOME}/${postfix}/lib/libSDL2.dll.a opengl32 glu32)
     set(SDL2_RUNTIME_LIBRARY ${SDL2_BINARY_HOME}/${postfix}/bin/SDL2.dll)
 
