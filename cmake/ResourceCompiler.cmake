@@ -22,6 +22,8 @@ macro(compile_resources output_list namespace infile)
     foreach (it ${RES_SOURCES})
         get_filename_component(it_name ${it} NAME)
         get_filename_component(it_name_we ${it} NAME_WE)
+        string(REGEX REPLACE [^0-9a-zA-Z] _ it_name_we ${it_name_we})
+        string(REGEX REPLACE ^[^a-zA-Z] _ it_name_we ${it_name_we})
         set(OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/resources/${it_name}.cpp)
         add_custom_command(
                 # This is the file we will generate

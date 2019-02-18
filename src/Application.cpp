@@ -123,11 +123,11 @@ void Application::initGL() {
 
 void Application::resetDefaultParams() {
     params.layers.resize(0);
-    params.layers.push_back(TerrainType{"Water", 0, 0.05, 0.02, 1});
-    params.layers.push_back(TerrainType{"Sand", 1, 0.08, 0.02, 1});
-    params.layers.push_back(TerrainType{"Grass", 2, 0.14, 0.02, 1});
-    params.layers.push_back(TerrainType{"Rocks", 3, 0.25, 0.02, 1});
-    params.layers.push_back(TerrainType{"Snow", 4, 100, 0.02, 10});
+    params.layers.emplace_back("Water", 0, 0.05, 0.02, 1);
+    params.layers.emplace_back("Sand", 1, 0.08, 0.02, 1);
+    params.layers.emplace_back("Grass", 2, 0.14, 0.02, 1);
+    params.layers.emplace_back("Rocks", 3, 0.25, 0.02, 1);
+    params.layers.emplace_back("Snow", 4, 100, 0.02, 10);
 
     for (auto &it : params.layers) {
         it.directGlTexture = params.texturePalette[it.textureNumber].myTex;
